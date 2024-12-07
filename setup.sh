@@ -14,6 +14,7 @@ sudo apt install python3.12-venv -y
 sudo apt install linux-libc-dev -y
 sudo apt install python3-dev -y
 sudo apt install python3-pip -y
+sudo apt install php8 -y
 
 if [ ! -d /opt/phoronix ]; then
   sudo mkdir /opt/phoronix
