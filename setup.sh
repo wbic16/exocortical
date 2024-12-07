@@ -4,6 +4,7 @@
 sudo apt install git -y
 sudo apt install zram-config -y
 sudo apt install build-essential -y
+sudo apt install clang -y
 sudo apt install vim -y
 sudo apt install htop -y
 sudo apt install openssh-server -y
