@@ -16,3 +16,20 @@ if [ ! -f ~/.ssh/id_ed25519.pub ]; then
   echo "No SSH Identity found...generating one."
   ssh-keygen -t ed25519
 fi
+
+if [ ! -f /etc/exo-ready ]; then
+  echo ""
+  echo "You need to touch /etc/exo-ready after uploading your public key to GitHub."
+  echo ""
+  cat ~/.ssh/id_ed25519.pub
+  echo ""
+  exit 1
+fi
+
+# external services
+if [ ! -d /opt/exo-explore ]; then
+  sudo mkdir /opt/exo-explore
+  sudo chown $USER:$USER /opt/exo-explore
+  cd /opt/exo-explore
+  git clone git@github.com:exo-explore/exo.git .
+fi
