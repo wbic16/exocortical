@@ -4,10 +4,11 @@ This repository provides a baseline Ubuntu reconfiguration for running local AI/
 
 ## Ubuntu Packages
 
-* git
-* zram
 * gcc
+* git
+* openssh
 * vim
+* zram
 
 ## Tooling
 
