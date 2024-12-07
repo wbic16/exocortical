@@ -55,3 +55,11 @@ if [ ! -d /opt/exo-explore ]; then
   git clone git@github.com:wbic16/exo.git .
   git checkout fix-issue-458
 fi
+
+if [ ! -d /opt/ROCm ]; then
+  sudo mkdir /opt/ROCm
+  sudo chown $USER:$USER /opt/ROCm
+  cd /opt/ROCm
+  git init -u https://github.com/ROCm/ROCm.git -b roc-6.3.x
+  git sync
+fi
