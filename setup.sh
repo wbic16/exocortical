@@ -2,6 +2,7 @@
 
 # packages
 sudo apt install git -y
+sudo apt install git-lfs -y
 sudo apt install zram-config -y
 sudo apt install net-tools -y
 sudo apt install build-essential -y
