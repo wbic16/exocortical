@@ -27,8 +27,9 @@ if [ -d /opt/exopy ]; then
   /opt/exopy/bin/pip3 install tensorflow
 fi
 
-# system config
+# opinionated system config
 git config --global init.defaultBranch exo
+git config pull.rebase true
 
 # security
 if [ ! -f ~/.ssh/id_ed25519.pub ]; then
