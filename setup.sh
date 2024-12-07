@@ -15,6 +15,14 @@ sudo apt install linux-libc-dev -y
 sudo apt install python3-dev -y
 sudo apt install python3-pip -y
 
+if [ ! -d /opt/phoronix ]; then
+  sudo mkdir /opt/phoronix
+  sudo chown $USER:$USER /opt/phoronix
+  cd /opt/phoronix
+  wget https://github.com/phoronix-test-suite/phoronix-test-suite/releases/download/v10.8.4/phoronix-test-suite_10.8.4_all.deb
+  sudo apt install ./phoronix-test-suite_10.8.4_all.deb -y
+fi
+
 # python virtual environment
 if [ ! -d /opt/exopy ]; then
   sudo mkdir /opt/exopy
@@ -60,6 +68,7 @@ if [ ! -d /opt/ROCm ]; then
   sudo mkdir /opt/ROCm
   sudo chown $USER:$USER /opt/ROCm
   cd /opt/ROCm
-  git init -u https://github.com/ROCm/ROCm.git -b roc-6.3.x
-  git sync
+  git clone git@github.com:ROCm/ROCm.git .
+  git checkout roc-6.3.x
+  git pull
 fi
