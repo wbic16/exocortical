@@ -19,6 +19,10 @@ if [ ! -d /opt/exopy ]; then
   sudo chown $USER:$USER /opt/exopy
   python3 -m venv /opt/exopy
 fi
+if [ -d /opt/exopy ]; then
+  /opt/exopy/bin/pip3 install llvmlite
+  /opt/exopy/bin/pip3 install numba
+fi
 
 # system config
 git config --global init.defaultBranch exo
