@@ -7,6 +7,17 @@ sudo apt install build-essential -y
 sudo apt install vim -y
 sudo apt install htop -y
 sudo apt install openssh-server -y
+sudo apt install python3.12-venv -y
+sudo apt install linux-libc-dev -y
+sudo apt install python3-dev -y
+sudo apt install python3-pip -y
+
+# python virtual environment
+if [ ! -d /opt/exopy ]; then
+  sudo mkdir /opt/exopy
+  sudo chown $USER:$USER /opt/exopy
+  python3 -m venv /opt/exopy
+fi
 
 # system config
 git config --global init.defaultBranch exo
