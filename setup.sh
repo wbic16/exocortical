@@ -23,6 +23,8 @@ fi
 if [ -d /opt/exopy ]; then
   /opt/exopy/bin/pip3 install llvmlite
   /opt/exopy/bin/pip3 install numba
+  /opt/exopy/bin/pip3 install torch
+  /opt/exopy/bin/pip3 install tensorflow
 fi
 
 # system config
