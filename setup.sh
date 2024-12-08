@@ -16,6 +16,7 @@ sudo apt install python3-dev -y
 sudo apt install python3-pip -y
 sudo apt install php -y
 sudo apt install gparted -y
+sudo apt install screen -y
 
 if [ ! -d /opt/phoronix ]; then
   sudo mkdir /opt/phoronix
