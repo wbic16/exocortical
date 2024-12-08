@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# packages
+# general dev ux
 sudo apt install git -y
 sudo apt install git-lfs -y
 sudo apt install zram-config -y
@@ -10,13 +10,23 @@ sudo apt install clang -y
 sudo apt install vim -y
 sudo apt install htop -y
 sudo apt install openssh-server -y
+sudo apt install apt-file -y
+
+# exo / tinygrad
 sudo apt install python3.12-venv -y
 sudo apt install linux-libc-dev -y
 sudo apt install python3-dev -y
 sudo apt install python3-pip -y
+
+# for phoronix
 sudo apt install php -y
 sudo apt install gparted -y
 sudo apt install screen -y
+
+# for beebjit
+sudo apt install libasound2-dev -y
+sudo apt install libpulse-dev -y
+sudo apt install libxext-dev -y
 
 if [ ! -d /opt/phoronix ]; then
   sudo mkdir /opt/phoronix
@@ -74,4 +84,11 @@ if [ ! -d /opt/ROCm ]; then
   git clone git@github.com:ROCm/ROCm.git .
   git checkout roc-6.3.x
   git pull
+fi
+
+if [ ! -d /opt/beebjit ]; then
+  sudo mkdir /opt/beebjit
+  sudo chown $USER:$USER /opt/beebjit
+  cd /opt/beebjit
+  git clone git@github.com:wbic16/beebjit.git .
 fi
