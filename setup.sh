@@ -11,6 +11,7 @@ sudo apt install vim -y
 sudo apt install htop -y
 sudo apt install openssh-server -y
 sudo apt install apt-file -y
+sudo apt install lm-sensors -y
 
 # exo / tinygrad
 sudo apt install python3.12-venv -y
