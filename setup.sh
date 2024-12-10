@@ -1,4 +1,5 @@
 #!/bin/bash
+sudo apt update
 
 # general dev ux
 sudo apt install git -y
@@ -99,3 +100,5 @@ if [ -d /opt/beebjit ]; then
   ./build.sh
   ./benchmark.sh
 fi
+
+sudo apt upgrade
