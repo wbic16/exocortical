@@ -1,4 +1,5 @@
 #!/bin/bash
+git pull
 sudo apt update
 
 # general dev ux
