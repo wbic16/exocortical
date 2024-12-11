@@ -14,6 +14,7 @@ sudo apt install htop -y
 sudo apt install openssh-server -y
 sudo apt install apt-file -y
 sudo apt install lm-sensors -y
+sudo apt install libfuse2t64 -y
 
 # exo / tinygrad
 sudo apt install python3.12-venv -y
