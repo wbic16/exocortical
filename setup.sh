@@ -95,10 +95,6 @@ if [ ! -d /opt/beebjit ]; then
   sudo chown $USER:$USER /opt/beebjit
   cd /opt/beebjit
   git clone git@github.com:wbic16/beebjit.git .
-fi
-
-if [ -d /opt/beebjit ]; then
-  cd /opt/beebjit
   ./build.sh
   ./benchmark.sh
 fi
