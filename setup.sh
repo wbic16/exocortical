@@ -98,3 +98,8 @@ if [ ! -d /opt/beebjit ]; then
 fi
 
 sudo apt upgrade -y
+cd /opt/exo-explore
+/opt/exopy/bin/pip install -e .
+/opt/exopy/bin/exo &
+
+echo "Setup Complete"
