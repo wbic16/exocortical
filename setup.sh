@@ -97,4 +97,4 @@ if [ ! -d /opt/beebjit ]; then
   git clone git@github.com:wbic16/beebjit.git .
 fi
 
-sudo apt upgrade
+sudo apt upgrade -y
