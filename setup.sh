@@ -95,8 +95,6 @@ if [ ! -d /opt/beebjit ]; then
   sudo chown $USER:$USER /opt/beebjit
   cd /opt/beebjit
   git clone git@github.com:wbic16/beebjit.git .
-  ./build.sh
-  ./benchmark.sh
 fi
 
 sudo apt upgrade
