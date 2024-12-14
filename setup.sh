@@ -1,5 +1,17 @@
 #!/bin/bash
+# opinionated system config
+git config --global init.defaultBranch exo
+git config pull.rebase true
+
 git pull
+ARG=$1
+if [ "x$ARG" = "xexec" ]; then
+  echo "Ready to update."
+else
+  $0 exec
+  exit $?
+fi
+
 sudo apt update
 
 # general dev ux
@@ -15,6 +27,9 @@ sudo apt install openssh-server -y
 sudo apt install apt-file -y
 sudo apt install lm-sensors -y
 sudo apt install libfuse2t64 -y
+
+# rust development
+sudo apt install rustup -y
 
 # exo / tinygrad
 sudo apt install python3.12-venv -y
@@ -52,10 +67,6 @@ if [ -d /opt/exopy ]; then
   /opt/exopy/bin/pip3 install torch
   /opt/exopy/bin/pip3 install tensorflow
 fi
-
-# opinionated system config
-git config --global init.defaultBranch exo
-git config pull.rebase true
 
 # security
 if [ ! -f ~/.ssh/id_ed25519.pub ]; then
