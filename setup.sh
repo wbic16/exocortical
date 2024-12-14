@@ -116,58 +116,120 @@ if [ ! -d /source ]; then
   echo "Fetching Exocortex source trees..."
   sudo mkdir /source
   sudo chown $USER:$USER /source
-  cd /source
-  
-  # The Exocortex
-  git clone git@github.com:wbic16/exocortical.git
-  git clone git@github.com:wbic16/wishnode.git
-  git clone git@github.com:wbic16/exocortex.git
-  git clone git@github.com:wbic16/human.git
-  git clone git@github.com:wbic16/nexura.git
-  git clone git@github.com:wbic16/thebook.git
+fi
 
-  # Phext Core
+cd /source
+# The Exocortex
+if [ ! -d /source/exocortical ]; then
+  git clone git@github.com:wbic16/exocortical.git
+fi
+if [ ! -d /source/wishnode ]; then
+  git clone git@github.com:wbic16/wishnode.git
+fi
+if [ ! -d /source/exocortex ]; then
+  git clone git@github.com:wbic16/exocortex.git
+fi
+if [ ! -d /source/human ]; then
+  git clone git@github.com:wbic16/human.git
+fi
+if [ ! -d /source/nexura ]; then
+  git clone git@github.com:wbic16/nexura.git
+fi
+if [ ! -d /source/thebook ]; then
+  git clone git@github.com:wbic16/thebook.git
+fi
+
+# Phext Core
+if [ ! -d /source/libphext-rs ]; then
   git clone git@github.com:wbic16/libphext-rs.git
+fi
+if [ ! -d /source/SQ ]; then
   git clone git@github.com:wbic16/SQ.git
+fi
+if [ ! -d /source/phext-notepad ]; then
   git clone git@github.com:wbic16/phext-notepad.git
+fi
+if [ ! -d /source/phext-shell ]; then
   git clone git@github.com:wbic16/phext-shell.git
+fi
+if [ ! -d /source/phext-explorer ]; then
   git clone git@github.com:wbic16/phext-explorer.git
+fi
 
   # Phext Implementations (JS, C, C++)
+if [ ! -d /source/libphext-node ]; then
   git clone git@github.com:wbic16/libphext-node.git
+fi
+if [ ! -d /source/libphext ]; then
   git clone git@github.com:wbic16/libphext.git
+fi
+if [ ! -d /source/libphext-cpp ]; then
   git clone git@github.com:wbic16/libphext-cpp.git
+fi
 
   # Phext Tools
+if [ ! -d /source/phcc ]; then
   git clone git@github.com:wbic16/phcc.git
+fi
 
   # Phext Applications
+if [ ! -d /source/dna-viewer ]; then
   git clone git@github.com:wbic16/dna-viewer.git
+fi
+if [ ! -d /source/phorge ]; then
   git clone git@github.com:wbic16/phorge.git
+fi
   
   # Games
+if [ ! -d /source/mini64k ]; then
   git clone git@github.com:wbic16/mini64k.git
+fi
+if [ ! -d /source/javascript-tetris ]; then
   git clone git@github.com:wbic16/javascript-tetris.git
+fi
+if [ ! -d /source/multiversal-go ]; then
   git clone git@github.com:wbic16/multiversal-go.git
+fi
 
   # APIs
+if [ ! -d /source/hello-phext ]; then
   git clone git@github.com:wbic16/hello-phext.git
+fi
+if [ ! -d /source/phext-wiki ]; then
   git clone git@github.com:wbic16/phext-wiki.git
+fi
+if [ ! -d /source/robospeak ]; then
   git clone git@github.com:wbic16/robospeak.git
+fi
+if [ ! -d /source/subspace-repeater ]; then
   git clone git@github.com:wbic16/subspace-repeater.git
+fi
 
   # Web Sites
+if [ ! -d /source/singularity-watch ]; then
   git clone git@github.com:wbic16/singularity-watch.git
+fi
+if [ ! -d /source/wbic16 ]; then
   git clone git@github.com:wbic16/wbic16.git
+fi
+if [ ! -d /source/phextio ]; then
   git clone git@github.com:wbic16/phextio.git
+fi
+if [ ! -d /source/sotafomo ]; then
   git clone git@github.com:wbic16/sotafomo.git
+fi
 
   # Teaching
+if [ ! -d /source/teach-web-dev ]; then
   git clone git@github.com:wbic16/teach-web-dev.git
+fi
 
   # Web/Social
-  git clone git@github.com:wbic16/twitter-analysis.git
-  git clone git@github.com:wbic16/ContactStrengthMeter.git
+if [ ! -d /source/x-analysis ]; then
+  git clone git@github.com:wbic16/x-analysis.git
+fi
+if [ ! -d /source/node-metrics ]; then
+  git clone git@github.com:wbic16/node-visualizer.git
 fi
 
 echo "Setup Complete."
