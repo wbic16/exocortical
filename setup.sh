@@ -228,7 +228,7 @@ fi
 if [ ! -d /source/x-analysis ]; then
   git clone git@github.com:wbic16/x-analysis.git
 fi
-if [ ! -d /source/node-metrics ]; then
+if [ ! -d /source/node-visualizer ]; then
   git clone git@github.com:wbic16/node-visualizer.git
 fi
 
