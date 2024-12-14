@@ -30,6 +30,7 @@ sudo apt install libfuse2t64 -y
 
 # rust development
 sudo apt install rustup -y
+sudo rustup default stable
 
 # exo / tinygrad
 sudo apt install python3.12-venv -y
