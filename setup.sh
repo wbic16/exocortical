@@ -111,6 +111,63 @@ fi
 sudo apt upgrade -y
 cd /opt/exo-explore
 /opt/exopy/bin/pip install -e .
-/opt/exopy/bin/exo &
 
-echo "Setup Complete"
+if [ ! -d /source ]; then
+  echo "Fetching Exocortex source trees..."
+  sudo mkdir /source
+  sudo chown $USER:$USER /source
+  cd /source
+  
+  # The Exocortex
+  git clone git@github.com:wbic16/exocortical.git
+  git clone git@github.com:wbic16/wishnode.git
+  git clone git@github.com:wbic16/exocortex.git
+  git clone git@github.com:wbic16/human.git
+  git clone git@github.com:wbic16/nexura.git
+  git clone git@github.com:wbic16/thebook.git
+
+  # Phext Core
+  git clone git@github.com:wbic16/libphext-rs.git
+  git clone git@github.com:wbic16/SQ.git
+  git clone git@github.com:wbic16/phext-notepad.git
+  git clone git@github.com:wbic16/phext-shell.git
+  git clone git@github.com:wbic16/phext-explorer.git
+
+  # Phext Implementations (JS, C, C++)
+  git clone git@github.com:wbic16/libphext-node.git
+  git clone git@github.com:wbic16/libphext.git
+  git clone git@github.com:wbic16/libphext-cpp.git
+
+  # Phext Tools
+  git clone git@github.com:wbic16/phcc.git
+
+  # Phext Applications
+  git clone git@github.com:wbic16/dna-viewer.git
+  git clone git@github.com:wbic16/phorge.git
+  
+  # Games
+  git clone git@github.com:wbic16/mini64k.git
+  git clone git@github.com:wbic16/javascript-tetris.git
+  git clone git@github.com:wbic16/multiversal-go.git
+
+  # APIs
+  git clone git@github.com:wbic16/hello-phext.git
+  git clone git@github.com:wbic16/phext-wiki.git
+  git clone git@github.com:wbic16/robospeak.git
+  git clone git@github.com:wbic16/subspace-repeater.git
+
+  # Web Sites
+  git clone git@github.com:wbic16/singularity-watch.git
+  git clone git@github.com:wbic16/wbic16.git
+  git clone git@github.com:wbic16/phextio.git
+  git clone git@github.com:wbic16/sotafomo.git
+
+  # Teaching
+  git clone git@github.com:wbic16/teach-web-dev.git
+
+  # Web/Social
+  git clone git@github.com:wbic16/twitter-analysis.git
+  git clone git@github.com:wbic16/ContactStrengthMeter.git
+fi
+
+echo "Setup Complete."
