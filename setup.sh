@@ -101,8 +101,7 @@ if [ ! -d /opt/exo-explore ]; then
   sudo mkdir /opt/exo-explore
   sudo chown $USER:$USER /opt/exo-explore
   cd /opt/exo-explore
-  git clone git@github.com:wbic16/exo.git .
-  git checkout fix-issue-458
+  git clone git@github.com:exo-explore/exo.git .
 fi
 
 if [ ! -d /opt/ROCm ]; then
