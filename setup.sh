@@ -27,6 +27,7 @@ sudo apt install openssh-server -y
 sudo apt install apt-file -y
 sudo apt install lm-sensors -y
 sudo apt install libfuse2t64 -y
+sudo apt install neovim -y
 
 # rust development
 sudo apt install rustup -y
