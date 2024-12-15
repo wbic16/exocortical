@@ -31,6 +31,18 @@ sudo apt install libfuse2t64 -y
 # rust development
 sudo apt install rustup -y
 sudo rustup default stable
+rustup default stable
+
+# phext tools
+cargo install phext-shell
+cargo install hello-phext
+cargo install quickfork
+
+IN_PATH=`grep '\.cargo\/bin' ~/.bashrc -c`
+if [ $IN_PATH = 0 ]; then
+  echo "Adding Rust programs to PATH - login again to activate"
+  echo "export PATH=\"\$HOME/.cargo/bin:\$PATH\"" >>$HOME/.bashrc
+fi
 
 # exo / tinygrad
 sudo apt install python3.12-venv -y
