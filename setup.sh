@@ -29,6 +29,10 @@ sudo apt install lm-sensors -y
 sudo apt install libfuse2t64 -y
 sudo apt install neovim -y
 
+# LLM agents
+sudo apt install npm
+npm install -g @builder.io/micro-agent
+
 # rust development
 sudo apt install rustup -y
 sudo rustup default stable
@@ -38,6 +42,7 @@ rustup default stable
 cargo install phext-shell
 cargo install hello-phext
 cargo install quickfork
+cargo install sq
 
 IN_PATH=`grep '\.cargo\/bin' ~/.bashrc -c`
 if [ $IN_PATH = 0 ]; then
@@ -98,12 +103,12 @@ if [ ! -f /etc/exo-ready ]; then
 fi
 
 # external services
-if [ ! -d /opt/exo-explore ]; then
-  sudo mkdir /opt/exo-explore
-  sudo chown $USER:$USER /opt/exo-explore
-  cd /opt/exo-explore
-  git clone git@github.com:exo-explore/exo.git .
-fi
+#if [ ! -d /opt/exo-explore ]; then
+#  sudo mkdir /opt/exo-explore
+#  sudo chown $USER:$USER /opt/exo-explore
+#  cd /opt/exo-explore
+#  git clone git@github.com:exo-explore/exo.git .
+#fi
 
 if [ ! -d /opt/ROCm ]; then
   sudo mkdir /opt/ROCm
@@ -122,8 +127,8 @@ if [ ! -d /opt/beebjit ]; then
 fi
 
 sudo apt upgrade -y
-cd /opt/exo-explore
-/opt/exopy/bin/pip install -e .
+#cd /opt/exo-explore
+#/opt/exopy/bin/pip install -e .
 
 if [ ! -d /source ]; then
   echo "Fetching Exocortex source trees..."
