@@ -30,7 +30,15 @@ sudo apt install libfuse2t64 -y
 sudo apt install neovim -y
 
 # LLM agents
-LLM_AGENT=raw
+curl -fsSL https://ollama.com/install.sh >install_ollama.sh
+chmod +x install_ollama.sh
+LLM_AGENT="ollama"
+./install_ollama.sh
+ollama run llama3.2 --verbose "hello, from llama 3.2"
+ollama run mistral --verbose "hello, from mistral"
+ollama run qwen2:7b --verbose "hello, from qwen2"
+ollama run gemma:7b --verbose "hello, from gemma"
+# Set LLM_AGENT=exollama to enable basic LLM functionality
 # Set LLM_AGENT=micro to enable the npm-based micro-agent
 if [ $LLM_AGENT -eq "micro" ]; then
   sudo apt install npm -y
@@ -254,7 +262,7 @@ if [ ! -d /source/node-visualizer ]; then
   git clone git@github.com:wbic16/node-visualizer.git
 fi
 
-if [ $LLM_AGENT -eq "micro" ]; then
+if [ "x$LLM_AGENT" = "xmicro" ]; then
   if [ ! -d /opt/micro-agent ]; then
     cd /opt
     sudo mkdir micro-agent
