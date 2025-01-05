@@ -37,9 +37,13 @@ ollama --version
 if [ $? -ne 0 ]; then
   ./install_ollama.sh
 fi
+echo "[ollama] llama3.2 test:"
 ollama run llama3.2 --verbose "hello, from llama 3.2"
+echo "[ollama] mistral test:"
 ollama run mistral --verbose "hello, from mistral"
+echo "[ollama] qwen2:7b test:"
 ollama run qwen2:7b --verbose "hello, from qwen2"
+echo "[ollama] gemma:7b test:"
 ollama run gemma:7b --verbose "hello, from gemma"
 # Set LLM_AGENT=exollama to enable basic LLM functionality
 # Set LLM_AGENT=micro to enable the npm-based micro-agent
