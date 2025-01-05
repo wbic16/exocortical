@@ -176,6 +176,14 @@ if [ ! -d /source/thebook ]; then
   git clone git@github.com:wbic16/thebook.git
 fi
 
+# LLMs
+if [ ! -d /source/llama2.c ]; then
+  git clone git@github.com:/wbic16/llama2.c.git
+fi
+if [ ! -d /source/exollama ]; then
+  git clone git@github.com:/wbic16/exollama.git
+fi
+
 # Phext Core
 if [ ! -d /source/libphext-rs ]; then
   git clone git@github.com:wbic16/libphext-rs.git
@@ -193,7 +201,7 @@ if [ ! -d /source/phext-explorer ]; then
   git clone git@github.com:wbic16/phext-explorer.git
 fi
 
-  # Phext Implementations (JS, C, C++)
+# Phext Implementations (JS, C, C++)
 if [ ! -d /source/libphext-node ]; then
   git clone git@github.com:wbic16/libphext-node.git
 fi
@@ -204,12 +212,12 @@ if [ ! -d /source/libphext-cpp ]; then
   git clone git@github.com:wbic16/libphext-cpp.git
 fi
 
-  # Phext Tools
+# Phext Tools
 if [ ! -d /source/phcc ]; then
   git clone git@github.com:wbic16/phcc.git
 fi
 
-  # Phext Applications
+# Phext Applications
 if [ ! -d /source/dna-viewer ]; then
   git clone git@github.com:wbic16/dna-viewer.git
 fi
@@ -217,7 +225,7 @@ if [ ! -d /source/phorge ]; then
   git clone git@github.com:wbic16/phorge.git
 fi
   
-  # Games
+# Games
 if [ ! -d /source/mini64k ]; then
   git clone git@github.com:wbic16/mini64k.git
 fi
@@ -228,7 +236,7 @@ if [ ! -d /source/multiversal-go ]; then
   git clone git@github.com:wbic16/multiversal-go.git
 fi
 
-  # APIs
+# APIs
 if [ ! -d /source/hello-phext ]; then
   git clone git@github.com:wbic16/hello-phext.git
 fi
@@ -242,7 +250,7 @@ if [ ! -d /source/subspace-repeater ]; then
   git clone git@github.com:wbic16/subspace-repeater.git
 fi
 
-  # Web Sites
+# Web Sites
 if [ ! -d /source/singularity-watch ]; then
   git clone git@github.com:wbic16/singularity-watch.git
 fi
@@ -256,12 +264,12 @@ if [ ! -d /source/sotafomo ]; then
   git clone git@github.com:wbic16/sotafomo.git
 fi
 
-  # Teaching
+# Teaching
 if [ ! -d /source/teach-web-dev ]; then
   git clone git@github.com:wbic16/teach-web-dev.git
 fi
 
-  # Web/Social
+# Web/Social
 if [ ! -d /source/x-analysis ]; then
   git clone git@github.com:wbic16/x-analysis.git
 fi

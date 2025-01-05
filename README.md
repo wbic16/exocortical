@@ -14,6 +14,13 @@ This repository provides a baseline Ubuntu reconfiguration for running local AI/
 * vim
 * zram
 
+## Local LLMs
+
+* ollama (llama3.2, mistral, qwen2:7b, gemma:7b)
+* exollama
+* llama2.c
+* micro-agent
+
 ## Tooling
 
 * phoronix (benchmarking)
