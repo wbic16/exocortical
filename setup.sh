@@ -250,4 +250,12 @@ if [ ! -d /source/node-visualizer ]; then
   git clone git@github.com:wbic16/node-visualizer.git
 fi
 
+if [ ! -d /opt/micro-agent ]; then
+  cd /opt
+  sudo mkdir micro-agent
+  sudo chown $USER:$USER micro-agent
+  cd micro-agent
+  micro-agent
+fi
+
 echo "Setup Complete."
