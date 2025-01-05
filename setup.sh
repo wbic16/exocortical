@@ -12,7 +12,7 @@ else
   exit $?
 fi
 
-sudo apt update
+sudo apt update -y
 
 # general dev ux
 sudo apt install git -y
@@ -30,8 +30,8 @@ sudo apt install libfuse2t64 -y
 sudo apt install neovim -y
 
 # LLM agents
-sudo apt install npm
-npm install -g @builder.io/micro-agent
+sudo apt install npm -y
+sudo npm install -g @builder.io/micro-agent
 
 # rust development
 sudo apt install rustup -y
