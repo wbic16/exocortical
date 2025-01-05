@@ -262,6 +262,10 @@ if [ ! -d /source/node-visualizer ]; then
   git clone git@github.com:wbic16/node-visualizer.git
 fi
 
+if [ ! -d /source/the-book-of-secret-knowledge ]; then
+  git clone https://github.com/wbic16/the-book-of-secret-knowledge.git
+fi
+
 if [ "x$LLM_AGENT" = "xmicro" ]; then
   if [ ! -d /opt/micro-agent ]; then
     cd /opt
