@@ -33,7 +33,10 @@ sudo apt install neovim -y
 curl -fsSL https://ollama.com/install.sh >install_ollama.sh
 chmod +x install_ollama.sh
 LLM_AGENT="ollama"
-./install_ollama.sh
+ollama --version
+if [ $? -ne 0 ]; then
+  ./install_ollama.sh
+fi
 ollama run llama3.2 --verbose "hello, from llama 3.2"
 ollama run mistral --verbose "hello, from mistral"
 ollama run qwen2:7b --verbose "hello, from qwen2"
