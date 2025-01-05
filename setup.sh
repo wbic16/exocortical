@@ -28,6 +28,7 @@ sudo apt install apt-file -y
 sudo apt install lm-sensors -y
 sudo apt install libfuse2t64 -y
 sudo apt install neovim -y
+sudo apt install curl -y
 
 # LLM agents
 curl -fsSL https://ollama.com/install.sh >install_ollama.sh
@@ -35,7 +36,7 @@ chmod +x install_ollama.sh
 LLM_AGENT="ollama"
 ollama --version
 if [ $? -ne 0 ]; then
-  ./install_ollama.sh
+  sudo ./install_ollama.sh
 fi
 echo "[ollama] llama3.2 test:"
 ollama run llama3.2 --verbose "hello, from llama 3.2"
