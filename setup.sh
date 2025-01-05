@@ -30,8 +30,12 @@ sudo apt install libfuse2t64 -y
 sudo apt install neovim -y
 
 # LLM agents
-sudo apt install npm -y
-sudo npm install -g @builder.io/micro-agent
+LLM_AGENT=raw
+# Set LLM_AGENT=micro to enable the npm-based micro-agent
+if [ $LLM_AGENT -eq "micro" ]; then
+  sudo apt install npm -y
+  sudo npm install -g @builder.io/micro-agent
+fi
 
 # rust development
 sudo apt install rustup -y
@@ -250,12 +254,14 @@ if [ ! -d /source/node-visualizer ]; then
   git clone git@github.com:wbic16/node-visualizer.git
 fi
 
-if [ ! -d /opt/micro-agent ]; then
-  cd /opt
-  sudo mkdir micro-agent
-  sudo chown $USER:$USER micro-agent
-  cd micro-agent
-  micro-agent
+if [ $LLM_AGENT -eq "micro" ]; then
+  if [ ! -d /opt/micro-agent ]; then
+    cd /opt
+    sudo mkdir micro-agent
+    sudo chown $USER:$USER micro-agent
+    cd micro-agent
+    micro-agent
+  fi
 fi
 
 echo "Setup Complete."
