@@ -48,6 +48,10 @@ echo "[ollama] gemma:7b test"
 ollama run gemma:7b --verbose "hello, from gemma"
 echo "[ollama] tinyllama test"
 ollama run tinyllama --verbose "hello, from tinyllama"
+echo "[ollama] mixtral test"
+ollama run mixtral --verbose "hello, from mixtral"
+echo "[ollama] opencoder test"
+ollama run opencoder --verbose "write hello world in bf"
 
 # Set LLM_AGENT=exollama to enable basic LLM functionality
 # Set LLM_AGENT=micro to enable the npm-based micro-agent
