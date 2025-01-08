@@ -1,0 +1,10 @@
+<?xml version="1.0" standalone='no'?>
+<!DOCTYPE service-group SYSTEM "avahi-service.dtd">
+<service-group>
+
+  <name replace-wildcards="yes">Exocortex Node - %h</name>
+  <service>
+    <type>_exocortex_exocortical._tcp</type>
+    <port>22</port>
+  </service>
+</service-group>

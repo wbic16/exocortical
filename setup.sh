@@ -30,6 +30,13 @@ sudo apt install libfuse2t64 -y
 sudo apt install neovim -y
 sudo apt install curl -y
 
+#exocortical advertisement
+if [ ! -f /etc/ava/services/exocortex.service ]; then
+  sudo snap install avahi
+  cp exocortex.service /etc/avahi/services/
+  sudo service avahi-daemon restart
+fi
+
 # LLM agents
 curl -fsSL https://ollama.com/install.sh >install_ollama.sh
 chmod +x install_ollama.sh
