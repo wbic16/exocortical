@@ -29,11 +29,12 @@ sudo apt install lm-sensors -y
 sudo apt install libfuse2t64 -y
 sudo apt install neovim -y
 sudo apt install curl -y
+sudo apt install avahi-utils -y
 
 #exocortical advertisement
 if [ ! -f /etc/ava/services/exocortex.service ]; then
   sudo snap install avahi
-  cp exocortex.service /etc/avahi/services/
+  sudo cp exocortex.service /etc/avahi/services/
   sudo service avahi-daemon restart
 fi
 
