@@ -1,0 +1,78 @@
+<html>
+<head>
+<title>Exocortexia</title>
+<style type="text/css">
+body {
+  background: #070707;
+  color: white;
+}
+a, a:visited {
+  color: white;
+  font-weight: bold;
+}
+ul.pod li {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  float: left;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+ ul.pod {
+  margin: 0; padding: 0;
+}
+h2 {
+  clear: both;
+}
+</style>
+<script type="text/javascript">
+function dgid(id) {
+  return document.getElementById(id);
+}
+function submitter() {
+  var main = dgid("main");
+  var host = dgid("host").selectedOptions[0].value;
+  var port = 11001;
+  var action = "select";
+  if (main) {
+    main.action = "http://" + host + ":" + port + "/api/v2/" + action;
+    main.submit();
+  }
+}
+</script>
+</head>
+<body>
+<form id="main" method="GET">
+  <label>Host: <select id="host"><option value="logos-prime">Logos Prime</option></select>
+  <label>Phext: <input type="text" name="p" value="index" /></label>
+  <label>Coordinate: <input type="text" name="c" value="1.1.1/1.1.1/1.1.1" /></label>
+  <label>Message: <input type="text" name="s" value="" /></label>
+  <input type="button" onclick="submitter();" value="Send" />
+</form>
+<script type="text/javascript">
+var i;
+var j;
+var hosts = new Array();
+hosts[0] = "logos-prime";
+hosts[1] = "halcyon-vector";
+hosts[2] = "aletheia-core";
+hosts[3] = "chrysalis-hub";
+hosts[4] = "aurora-continuum";
+hosts[5] = "luma";
+var phext = "index";
+var coordinate = "1.1.1/1.1.1/1.1.1";
+var scroll = "";
+for (j = 0; j < 6; ++j)
+{
+  var host = hosts[j];
+  document.write("<h2>" + host + "</h2><ul class=\"pod\">");
+  for (i = 0; i < 101; ++i)
+  {
+    var port = 11000 + i;
+    document.write("<li><a href=\"http://" + host + ":" + port + "/api/v2/select?p=" + phext + "&c=" + coordinate + "\">" + host + ":" + port + " -> " + phext + " @ " + coordinate + "</a></li>");
+  }
+  document.write("</ul>");
+}
+</script>
+</body>
+</html>
