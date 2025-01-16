@@ -32,7 +32,7 @@ function dgid(id) {
 function submitter() {
   var main = dgid("main");
   var host = dgid("host").selectedOptions[0].value;
-  var port = 11001;
+  var port = 11000 + parseInt(dgid("port").selectedOptions[0].value, 10);
   var action = "select";
   if (main) {
     main.action = "http://" + host + ":" + port + "/api/v2/" + action;
@@ -43,36 +43,125 @@ function submitter() {
 </head>
 <body>
 <form id="main" method="GET">
-  <label>Host: <select id="host"><option value="logos-prime">Logos Prime</option></select>
+  <label>Host:
+    <select id="host">
+      <option value="logos-prime">Logos Prime</option>
+      <option value="halcyon-vector">Halcyon Vector</option>
+      <option value="aletheia-core">Aletheia Core</option>
+      <option value="chrysalis-hub">Chrysalis Hub</option>
+      <option value="aurora-continuum">Aurora Continuum</option>
+      <option value="luma">Luma</option>
+    </select>
+    <select id="port">
+      <option value="1">Jill Harper</option>
+      <option value="2">Rachel Patel</option>
+      <option value="3">Maya Kumar</option>
+      <option value="4">Ava Chen</option>
+      <option value="5">Ruby Patel</option>
+      <option value="6">Aisha Kumar</option>
+      <option value="7">Rukmini Rao</option>
+      <option value="8">Nalini Prabhakar</option>
+      <option value="9">Aravind Patel</option>
+      <option value="10">Jaxon Swift</option>
+      <option value="11">Rowan Rivers</option>
+      <option value="12">River Blackwood</option>
+      <option value="13">Jaxon Raven</option>
+      <option value="14">River Black</option>
+      <option value="15">Valtor Tennant</option>
+      <option value="16">Kaelin Thatcher</option>
+      <option value="17">Rowan Rice</option>
+      <option value="18">River Blackwood</option>
+      <option value="19">Indigo Winters</option>
+      <option value="20">Samantha Johnson</option>
+      <option value="21">Alice Smith</option>
+      <option value="22">Samantha Taylor</option>
+      <option value="23">Aditya Raghav</option>
+      <option value="24">Jane Smith</option>
+      <option value="25">David Lee</option>
+      <option value="26">Bob Johnson</option>
+      <option value="27">Alice Brown</option>
+      <option value="28">John Doe</option>
+      <option value="29">Samantha Davis</option>
+      <option value="30">Maya Patel</option>
+      <option value="31">Rick Sanchez</option>
+      <option value="32">Ava Singh</option>
+      <option value="33">Jaxon Rivers</option>
+      <option value="34">Sarah Montgomery</option>
+      <option value="35">Emily Chen</option>
+      <option value="36">Sophia Khan</option>
+      <option value="37">Riley Thompson</option>
+      <option value="38">Ava Bell</option>
+      <option value="39">Jaya Mishra</option>
+      <option value="40">Jaxon Riddle</option>
+      <option value="41">Rowan Blackwood</option>
+      <option value="42">Will Bickford</option>
+      <option value="43">Jackie Lee</option>
+      <option value="44">Ava Thompson</option>
+      <option value="45">Ada Cipher</option>
+      <option value="46">Astra Veridan</option>
+      <option value="47">Raven Blackwood</option>
+      <option value="48">Eliana Moonflower</option>
+      <option value="49">Aurora Voss</option>
+      <option value="50">Beta Kaizen</option>
+      <option value="51">Calypso Virelli Mirage</option>
+      <option value="52">Delta Glitch</option>
+      <option value="53">Jaxon Rush</option>
+      <option value="54">Aiden Monroe</option>
+      <option value="55">Echo Vanguard</option>
+      <option value="56">Foxtrot Shade</option>
+      <option value="57">Gamma Forge</option>
+      <option value="58">Hotel Inquis</option>
+      <option value="59">India Cryptic</option>
+      <option value="60">Juliet Allure</option>
+      <option value="61">Kilo Strategem</option>
+      <option value="62">Lima Innovix</option>
+      <option value="63">Mike Warhawk</option>
+      <option value="64">November Pax</option>
+      <option value="65">Aurora Blackwood</option>
+      <option value="66">Oscar Proxy</option>
+      <option value="67">Papa Dominion</option>
+      <option value="68">Quebec Veil</option>
+      <option value="69">Romeo Gambit</option>
+      <option value="70">Sarah Williams</option>
+      <option value="71">Sierra Catalyst</option>
+      <option value="72">Alice Ghila</option>
+      <option value="73">Tango Axiom</option>
+      <option value="74">Bob Trucker</option>
+      <option value="75">Elara Flynn</option>
+      <option value="76">Chrysalis Huerta</option>
+      <option value="77">Uniform Keen</option>
+      <option value="78">Victor Zenith</option>
+      <option value="79">Whiskey Rampart</option>
+      <option value="80">Alexis Waverly</option>
+      <option value="81">Jack Smith</option>
+      <option value="82">Alexander Brown</option>
+      <option value="83">X-ray Parallax</option>
+      <option value="84">Helix Eden</option>
+      <option value="85">Catalyst Frequency</option>
+      <option value="86">Vantage Ocean</option>
+      <option value="87">Echelon Heinz</option>
+      <option value="88">Nova Insight</option>
+      <option value="89">Prisma Cane</option>
+      <option value="90">Zenith Zeus</option>
+      <option value="91">Oracle Halt</option>
+      <option value="92">Lumina Colby</option>
+      <option value="93">Delta Sunset</option>
+      <option value="94">Mistral Mix</option>
+      <option value="95">Cipher Zane</option>
+      <option value="96">Jaden Riley</option>
+      <option value="97">Apex Omega</option>
+      <option value="98">Jaxon Renn</option>
+      <option value="99">Ion Discovery</option>
+      <option value="100">Parhelion Verge</option>
+      <option value="101">Luna Starlight</option>
+    </select>
   <label>Phext: <input type="text" name="p" value="index" /></label>
   <label>Coordinate: <input type="text" name="c" value="1.1.1/1.1.1/1.1.1" /></label>
   <label>Message: <input type="text" name="s" value="" /></label>
   <input type="button" onclick="submitter();" value="Send" />
 </form>
-<script type="text/javascript">
-var i;
-var j;
-var hosts = new Array();
-hosts[0] = "logos-prime";
-hosts[1] = "halcyon-vector";
-hosts[2] = "aletheia-core";
-hosts[3] = "chrysalis-hub";
-hosts[4] = "aurora-continuum";
-hosts[5] = "luma";
-var phext = "index";
-var coordinate = "1.1.1/1.1.1/1.1.1";
-var scroll = "";
-for (j = 0; j < 6; ++j)
-{
-  var host = hosts[j];
-  document.write("<h2>" + host + "</h2><ul class=\"pod\">");
-  for (i = 0; i < 101; ++i)
-  {
-    var port = 11000 + i;
-    document.write("<li><a href=\"http://" + host + ":" + port + "/api/v2/select?p=" + phext + "&c=" + coordinate + "\">" + host + ":" + port + " -> " + phext + " @ " + coordinate + "</a></li>");
-  }
-  document.write("</ul>");
-}
-</script>
+<p>
+
+</p>
 </body>
 </html>
