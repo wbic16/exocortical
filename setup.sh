@@ -166,7 +166,12 @@ sudo apt upgrade -y
 #cd /opt/exo-explore
 #/opt/exopy/bin/pip install -e .
 
-/opt/exopy/bin/pip install llama-index openai
+/opt/exopy/bin/pip install llama-index openai tf-keras llama-index-embeddings-huggingface
+/opt/exopy/bin/pip install -U openai-whisper
+/opt/exopy/bin/pip install llama-index-llms-ollama
+
+# see: https://github.com/tensorflow/tensorflow/issues/62075
+/opt/exopy/bin/pip install tensorflow[and-cuda]
 
 if [ ! -d /source ]; then
   echo "Fetching Exocortex source trees..."
