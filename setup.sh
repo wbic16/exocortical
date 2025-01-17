@@ -166,6 +166,8 @@ sudo apt upgrade -y
 #cd /opt/exo-explore
 #/opt/exopy/bin/pip install -e .
 
+/opt/exopy/bin/pip install llama-index openai
+
 if [ ! -d /source ]; then
   echo "Fetching Exocortex source trees..."
   sudo mkdir /source
