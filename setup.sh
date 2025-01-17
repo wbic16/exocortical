@@ -30,6 +30,7 @@ sudo apt install libfuse2t64 -y
 sudo apt install neovim -y
 sudo apt install curl -y
 sudo apt install avahi-utils -y
+sudo snap install docker -y
 
 #exocortical advertisement
 if [ ! -f /etc/ava/services/exocortex.service ]; then
