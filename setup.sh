@@ -121,6 +121,7 @@ if [ -d /opt/exopy ]; then
   /opt/exopy/bin/pip3 install numba
   /opt/exopy/bin/pip3 install torch
   /opt/exopy/bin/pip3 install tensorflow
+  /opt/exopy/bin/pip3 install shap
 fi
 
 # security
