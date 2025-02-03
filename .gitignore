@@ -1,1 +1,4 @@
 *.deb
+.tb-switch
+.tb0-network
+.tb1-network

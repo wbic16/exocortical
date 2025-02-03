@@ -31,6 +31,7 @@ sudo apt install neovim -y
 sudo apt install curl -y
 sudo apt install avahi-utils -y
 sudo snap install docker -y
+sudo apt install bridge-utils -y
 
 #exocortical advertisement
 if [ ! -f /etc/ava/services/exocortex.service ]; then
