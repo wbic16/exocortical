@@ -32,6 +32,7 @@ sudo apt install curl -y
 sudo apt install avahi-utils -y
 sudo snap install docker -y
 sudo apt install bridge-utils -y
+sudo apt install elinks -y
 
 #exocortical advertisement
 if [ ! -f /etc/ava/services/exocortex.service ]; then
@@ -48,20 +49,22 @@ ollama --version
 if [ $? -ne 0 ]; then
   sudo ./install_ollama.sh
 fi
-echo "[ollama] llama3.2 test"
+#echo "[ollama] llama3.2 test"
 ollama run llama3.2 --verbose "hello, from llama 3.2"
-echo "[ollama] mistral test"
-ollama run mistral --verbose "hello, from mistral"
-echo "[ollama] qwen2:7b test"
-ollama run qwen2:7b --verbose "hello, from qwen2"
-echo "[ollama] gemma:7b test"
-ollama run gemma:7b --verbose "hello, from gemma"
+#echo "[ollama] mistral test"
+#ollama run mistral --verbose "hello, from mistral"
+#echo "[ollama] qwen2:7b test"
+#ollama run qwen2:7b --verbose "hello, from qwen2"
+#echo "[ollama] gemma:7b test"
+#ollama run gemma:7b --verbose "hello, from gemma"
 echo "[ollama] tinyllama test"
 ollama run tinyllama --verbose "hello, from tinyllama"
 #echo "[ollama] mixtral test"
 #ollama run mixtral --verbose "hello, from mixtral"
-echo "[ollama] opencoder test"
-ollama run opencoder --verbose "write hello world in bf"
+#echo "[ollama] opencoder test"
+#ollama run opencoder --verbose "write hello world in bf"
+echo "[ollama] deepseek-r1 test"
+ollama run deepseek-r1:8b --verbose "hello, from the exocortex"
 
 # Set LLM_AGENT=exollama to enable basic LLM functionality
 # Set LLM_AGENT=micro to enable the npm-based micro-agent
