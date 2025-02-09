@@ -14,6 +14,10 @@ This repository provides a baseline Ubuntu reconfiguration for running local AI/
 * vim
 * zram
 
+## Agents 
+
+* see ports.html to get started chatting with the Exocortex
+
 ## Local LLMs
 
 * ollama (llama3.2, mistral, qwen2:7b, gemma:7b)
