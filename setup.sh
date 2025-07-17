@@ -33,6 +33,7 @@ sudo apt install avahi-utils -y
 sudo snap install docker -y
 sudo apt install bridge-utils -y
 sudo apt install elinks -y
+sudo apt install libgmp-dev -y
 
 #exocortical advertisement
 if [ ! -f /etc/ava/services/exocortex.service ]; then
