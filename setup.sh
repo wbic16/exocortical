@@ -34,6 +34,9 @@ sudo snap install docker -y
 sudo apt install bridge-utils -y
 sudo apt install elinks -y
 sudo apt install libgmp-dev -y
+if [ ! -f /etc/exo-uv-ready ]; then
+  ./patch-libuv.sh
+fi
 
 #exocortical advertisement
 if [ ! -f /etc/ava/services/exocortex.service ]; then
