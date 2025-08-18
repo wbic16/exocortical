@@ -37,6 +37,7 @@ sudo apt install libgmp-dev -y
 if [ ! -f /etc/exo-uv-ready ]; then
   ./patch-libuv.sh
 fi
+sudo apt install sysbench -y
 
 #exocortical advertisement
 if [ ! -f /etc/ava/services/exocortex.service ]; then
