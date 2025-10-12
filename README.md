@@ -1,6 +1,6 @@
 # exocortical
 
-This repository provides a baseline Ubuntu reconfiguration for running local AI/ML workloads.
+This repository provides an Ubuntu-based reconfiguration for running local AI/ML workloads.
 
 ## Ubuntu Packages
 
@@ -20,10 +20,9 @@ This repository provides a baseline Ubuntu reconfiguration for running local AI/
 
 ## Local LLMs
 
-* ollama (llama3.2, mistral, qwen2:7b, gemma:7b)
+* ollama
 * exollama
 * llama2.c
-* micro-agent
 
 ## Tooling
 
@@ -31,9 +30,10 @@ This repository provides a baseline Ubuntu reconfiguration for running local AI/
 * exopy (llvmlite, numba, torch, tensorflow)
 * exolabs
 * beebjit
-* this repo (so far)
 
 ## Exocortex Source Repositories
+
+The setup script also helps you clone a number of related repositories.
 
 * exocortical
 * wishnode
