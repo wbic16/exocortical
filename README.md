@@ -1,6 +1,6 @@
 # exocortical
 
-This repository provides an Ubuntu-based reconfiguration for running local AI/ML workloads.
+This repository provides an Ubuntu-based reconfiguration for running an Exocortex.
 
 ## Ubuntu Packages
 
