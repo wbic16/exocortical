@@ -8,7 +8,7 @@ cd /source/phext-mcp
 cargo build --release
 if [ ! -f ~/.mcphost.yml ];
 then
-	cp mcphost-config.yml
+	cp mcphost-config.yml ~/.mcphost.yml
 	echo "Installed default mcphost config"
 else
 	echo "Review mcphost-config.yml"
