@@ -10,6 +10,12 @@ cd /usr/local
 if [ ! -d go ]; then
 	tar zxvf $ARCHIVE
 fi
+HAVE_GO_BIN=`grep -c '\$HOME\/go\/bin' $HOME/.bashrc`
+if [ $HAVE_GO_BIN -eq 0 ]; then
+	if [ -d $HOME/go/bin ]; then
+		echo "Warning: You have a user-specific Go bin folder, but it isn't in your path yet."
+	fi
+fi
 HAVE_GO=`grep -c 'usr\/local\/go\/bin' $HOME/.bashrc`
 if [ $HAVE_GO -eq 1 ];
 then
@@ -23,5 +29,5 @@ then
 else
 	echo "You need to patch \$HOME/.bashrc to include the line below"
 	echo
-	echo "export PATH=\"\$PATH:/usr/local/go/bin\""
+	echo "export PATH=\"\$PATH:/usr/local/go/bin:\$HOME/go/bin\""
 fi

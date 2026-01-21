@@ -1,0 +1,6 @@
+mcpServers:
+  phext:
+    type: "local"
+    command: ["/source/phext-mcp/target/release/phext-mcp"]
+    environment:
+      RUST_LOG: "info"
