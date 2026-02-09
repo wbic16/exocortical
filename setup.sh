@@ -179,6 +179,7 @@ sudo apt upgrade -y
 /opt/exopy/bin/pip install llama-index openai tf-keras llama-index-embeddings-huggingface
 /opt/exopy/bin/pip install -U openai-whisper
 /opt/exopy/bin/pip install llama-index-llms-ollama
+pip install agentmail python-dotenv
 
 # see: https://github.com/tensorflow/tensorflow/issues/62075
 /opt/exopy/bin/pip install tensorflow[and-cuda]
