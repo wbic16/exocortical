@@ -89,6 +89,7 @@ cargo install phext-shell
 cargo install hello-phext
 cargo install quickfork
 cargo install sq
+cargo install phext-lattice
 
 IN_PATH=`grep '\.cargo\/bin' ~/.bashrc -c`
 if [ $IN_PATH = 0 ]; then
