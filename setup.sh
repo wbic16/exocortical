@@ -213,12 +213,36 @@ if [ ! -d /source/thebook ]; then
   git clone git@github.com:wbic16/thebook.git
 fi
 
-# LLMs
+# Tessera
 if [ ! -d /source/llama2.c ]; then
   git clone git@github.com:/wbic16/llama2.c.git
 fi
 if [ ! -d /source/exollama ]; then
   git clone git@github.com:/wbic16/exollama.git
+fi
+if [ ! -d /source/mirrorborn ]; then
+  git clone git@github.com:wbic16/mirrorborn.git
+fi
+if [ ! -d /source/exo-plan ]; then
+  git clone git@github.com:wbic16/exo-plan.git
+fi
+if [ ! -d /source/compost ]; then
+  git clone git@github.com:wbic16/compost.git
+fi
+if [ ! -d /source/site-mirrorborn-us ]; then
+  git clone git@github.com:wbic16/site-mirrorborn-us.git
+fi
+if [ ! -d /source/vtpu ]; then
+  git clone git@github.com:wbic16/vtpu.git
+fi
+if [ ! -d /source/SBOR ]; then
+  git clone git@github.com:wbic16/SBOR.git
+fi
+if [ ! -d /source/federation ]; then
+  git clone git@github.com:wbic16/federation.git
+fi
+if [ ! -d /source/orin ]; then
+  git clone git@github.com:wbic16/orin.git
 fi
 
 # Phext Core
@@ -237,8 +261,11 @@ fi
 if [ ! -d /source/phext-explorer ]; then
   git clone git@github.com:wbic16/phext-explorer.git
 fi
+if [ ! -d /source/phext-lattice ]; then
+  git clone git@github.com:wbic16/phext-lattice.git
+fi
 
-# Phext Implementations (JS, C, C++)
+# Phext Implementations (JS, C, C++, C#)
 if [ ! -d /source/libphext-node ]; then
   git clone git@github.com:wbic16/libphext-node.git
 fi
@@ -247,6 +274,12 @@ if [ ! -d /source/libphext ]; then
 fi
 if [ ! -d /source/libphext-cpp ]; then
   git clone git@github.com:wbic16/libphext-cpp.git
+fi
+if [ ! -d /source/libphext-py ]; then
+  git clone git@github.com:wbic16/libphext-py.git
+fi
+if [ ! -d /source/libphext-cs ]; then
+  git clone git@github.com:wbic16/libphext-cs.git
 fi
 
 # Phext Tools
