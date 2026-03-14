@@ -361,4 +361,15 @@ if [ "x$LLM_AGENT" = "xmicro" ]; then
   fi
 fi
 
+# DNS Backup
+if [ ! -f /etc/systemd/resolved.conf.d/fallback.conf ]; then
+  echo "Installing fallback DNS..."
+  sudo tee /etc/systemd/resolved.conf.d/fallback.conf << 'EOF'
+[Resolve]
+FallbackDNS=1.1.1.1 8.8.8.8
+DNS=1.1.1.1 8.8.8.8
+EOF
+  sudo systemctl restart systemd-resolved
+fi
+
 echo "Setup Complete."
