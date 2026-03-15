@@ -1,10 +1,13 @@
 #!/bin/bash
-# opinionated system config
+# opinionated system config - optimized for speed
+# Exocortex Setup v2 - parallelized edition
+set -euo pipefail
+
 git config --global init.defaultBranch exo
 git config pull.rebase true
 
 git pull
-ARG=$1
+ARG=${1:-}
 if [ "x$ARG" = "xexec" ]; then
   echo "Ready to update."
 else
@@ -12,133 +15,123 @@ else
   exit $?
 fi
 
+export DEBIAN_FRONTEND=noninteractive
+MAX_PARALLEL=${MAX_PARALLEL:-8}  # tunable: git clone concurrency
+
+# ============================================================
+# Phase 1: System packages (single apt call)
+# ============================================================
+echo "[phase 1] System packages..."
 sudo apt update -y
 
-# general dev ux
-sudo apt install git -y
-sudo apt install git-lfs -y
-sudo apt install gh -y
-sudo apt install zram-config -y
-sudo apt install net-tools -y
-sudo apt install build-essential -y
-sudo apt install clang -y
-sudo apt install vim -y
-sudo apt install htop -y
-sudo apt install openssh-server -y
-sudo apt install apt-file -y
-sudo apt install lm-sensors -y
-sudo apt install libfuse2t64 -y
-sudo apt install neovim -y
-sudo apt install curl -y
-sudo apt install avahi-utils -y
-sudo snap install docker -y
-sudo apt install bridge-utils -y
-sudo apt install elinks -y
-sudo apt install libgmp-dev -y
+# batch all apt packages into one transaction
+sudo apt install -y --no-install-recommends \
+  git git-lfs gh \
+  zram-config net-tools \
+  build-essential clang \
+  vim neovim \
+  htop \
+  openssh-server \
+  apt-file \
+  lm-sensors \
+  libfuse2t64 \
+  curl \
+  avahi-utils \
+  bridge-utils \
+  elinks \
+  libgmp-dev \
+  sysbench \
+  rustup \
+  python3.12-venv linux-libc-dev python3-dev python3-pip \
+  php gparted screen \
+  libasound2-dev libpulse-dev libxext-dev
+
+# snap packages (docker only - avahi snap is conditional below)
+if ! snap list docker &>/dev/null; then
+  sudo snap install docker
+fi
+
+# libuv patch (idempotent gate)
 if [ ! -f /etc/exo-uv-ready ]; then
   ./patch-libuv.sh
 fi
-sudo apt install sysbench -y
 
-#exocortical advertisement
-if [ ! -f /etc/ava/services/exocortex.service ]; then
-  sudo snap install avahi
+# ============================================================
+# Phase 2: Avahi exocortical advertisement
+# ============================================================
+if [ ! -f /etc/avahi/services/exocortex.service ]; then
+  echo "[phase 2] Avahi advertisement..."
+  if ! snap list avahi &>/dev/null; then
+    sudo snap install avahi
+  fi
   sudo cp exocortex.service /etc/avahi/services/
   sudo service avahi-daemon restart
 fi
 
-# LLM agents
-curl -fsSL https://ollama.com/install.sh >install_ollama.sh
-chmod +x install_ollama.sh
+# ============================================================
+# Phase 3: Ollama
+# ============================================================
+echo "[phase 3] Ollama..."
 LLM_AGENT="ollama"
-ollama --version
-if [ $? -ne 0 ]; then
-  sudo ./install_ollama.sh
+if ! command -v ollama &>/dev/null; then
+  curl -fsSL https://ollama.com/install.sh | sudo bash
 fi
-#echo "[ollama] llama3.2 test"
-#ollama run llama3.2 --verbose "hello, from llama 3.2"
-#echo "[ollama] mistral test"
-#ollama run mistral --verbose "hello, from mistral"
-#echo "[ollama] qwen2:7b test"
-#ollama run qwen2:7b --verbose "hello, from qwen2"
-#echo "[ollama] gemma:7b test"
-#ollama run gemma:7b --verbose "hello, from gemma"
-#echo "[ollama] tinyllama test"
-#ollama run tinyllama --verbose "hello, from tinyllama"
-#echo "[ollama] mixtral test"
-#ollama run mixtral --verbose "hello, from mixtral"
-#echo "[ollama] opencoder test"
-#ollama run opencoder --verbose "write hello world in bf"
-#echo "[ollama] deepseek-r1 test"
-#ollama run deepseek-r1:8b --verbose "hello, from the exocortex"
 
-# Set LLM_AGENT=exollama to enable basic LLM functionality
-# Set LLM_AGENT=micro to enable the npm-based micro-agent
-if [ $LLM_AGENT -eq "micro" ]; then
-  sudo apt install npm -y
+if [ "x$LLM_AGENT" = "xmicro" ]; then
+  sudo apt install -y npm
   sudo npm install -g @builder.io/micro-agent
 fi
 
-# rust development
-sudo apt install rustup -y
-sudo rustup default stable
-rustup default stable
+# ============================================================
+# Phase 4: Rust toolchain + cargo installs (parallel)
+# ============================================================
+echo "[phase 4] Rust toolchain..."
+sudo rustup default stable 2>/dev/null || true
+rustup default stable 2>/dev/null || true
 
-# phext tools
-cargo install phext-shell
-cargo install hello-phext
-cargo install quickfork
-cargo install sq
-cargo install phext-lattice
-
-IN_PATH=`grep '\.cargo\/bin' ~/.bashrc -c`
-if [ $IN_PATH = 0 ]; then
+IN_PATH=$(grep '\.cargo\/bin' ~/.bashrc -c || true)
+if [ "$IN_PATH" = "0" ]; then
   echo "Adding Rust programs to PATH - login again to activate"
-  echo "export PATH=\"\$HOME/.cargo/bin:\$PATH\"" >>$HOME/.bashrc
+  echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> "$HOME/.bashrc"
 fi
+export PATH="$HOME/.cargo/bin:$PATH"
 
-# exo / tinygrad
-sudo apt install python3.12-venv -y
-sudo apt install linux-libc-dev -y
-sudo apt install python3-dev -y
-sudo apt install python3-pip -y
+echo "[phase 4] Cargo installs (parallel)..."
+cargo_crates=(phext-shell hello-phext quickfork sq phext-lattice)
+for crate in "${cargo_crates[@]}"; do
+  cargo install "$crate" &
+done
+wait
+echo "[phase 4] Cargo installs complete."
 
-# for phoronix
-sudo apt install php -y
-sudo apt install gparted -y
-sudo apt install screen -y
-
-# for beebjit
-sudo apt install libasound2-dev -y
-sudo apt install libpulse-dev -y
-sudo apt install libxext-dev -y
-
-if [ ! -d /opt/phoronix ]; then
-  sudo mkdir /opt/phoronix
-  sudo chown $USER:$USER /opt/phoronix
-  cd /opt/phoronix
-  wget https://github.com/phoronix-test-suite/phoronix-test-suite/releases/download/v10.8.4/phoronix-test-suite_10.8.4_all.deb
-  sudo apt install ./phoronix-test-suite_10.8.4_all.deb -y
-fi
-
-# python virtual environment
+# ============================================================
+# Phase 5: Python virtual environment + pip installs (batched)
+# ============================================================
+echo "[phase 5] Python environment..."
 if [ ! -d /opt/exopy ]; then
-  sudo mkdir /opt/exopy
-  sudo chown $USER:$USER /opt/exopy
+  sudo mkdir -p /opt/exopy
+  sudo chown "$USER:$USER" /opt/exopy
   python3 -m venv /opt/exopy
 fi
-if [ -d /opt/exopy ]; then
-  /opt/exopy/bin/pip3 install llvmlite
-  /opt/exopy/bin/pip3 install numba
-  /opt/exopy/bin/pip3 install torch
-  /opt/exopy/bin/pip3 install tensorflow
-  /opt/exopy/bin/pip3 install shap
-fi
 
-# security
+# batch all pip installs into one call
+/opt/exopy/bin/pip3 install --quiet \
+  llvmlite numba torch tensorflow shap \
+  llama-index openai tf-keras \
+  llama-index-embeddings-huggingface \
+  llama-index-llms-ollama \
+  "tensorflow[and-cuda]"
+
+/opt/exopy/bin/pip install --quiet -U openai-whisper
+
+pip install --quiet agentmail python-dotenv 2>/dev/null || true
+
+# ============================================================
+# Phase 6: SSH key
+# ============================================================
 if [ ! -f ~/.ssh/id_ed25519.pub ]; then
   echo "No SSH Identity found...generating one."
-  ssh-keygen -t ed25519
+  ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519
 fi
 
 if [ ! -f /etc/exo-ready ]; then
@@ -150,220 +143,158 @@ if [ ! -f /etc/exo-ready ]; then
   exit 1
 fi
 
-# external services
-#if [ ! -d /opt/exo-explore ]; then
-#  sudo mkdir /opt/exo-explore
-#  sudo chown $USER:$USER /opt/exo-explore
-#  cd /opt/exo-explore
-#  git clone git@github.com:exo-explore/exo.git .
-#fi
+# ============================================================
+# Phase 7: External repos (ROCm, beebjit, phoronix)
+# ============================================================
+echo "[phase 7] External repos..."
+
+if [ ! -d /opt/phoronix ]; then
+  sudo mkdir -p /opt/phoronix
+  sudo chown "$USER:$USER" /opt/phoronix
+  (
+    cd /opt/phoronix
+    wget -q https://github.com/phoronix-test-suite/phoronix-test-suite/releases/download/v10.8.4/phoronix-test-suite_10.8.4_all.deb
+    sudo apt install -y ./phoronix-test-suite_10.8.4_all.deb
+  ) &
+fi
 
 if [ ! -d /opt/ROCm ]; then
-  sudo mkdir /opt/ROCm
-  sudo chown $USER:$USER /opt/ROCm
-  cd /opt/ROCm
-  git clone git@github.com:ROCm/ROCm.git .
-  git checkout roc-6.3.x
-  git pull
+  sudo mkdir -p /opt/ROCm
+  sudo chown "$USER:$USER" /opt/ROCm
+  (
+    cd /opt/ROCm
+    git clone git@github.com:ROCm/ROCm.git .
+    git checkout roc-6.3.x
+    git pull
+  ) &
 fi
 
 if [ ! -d /opt/beebjit ]; then
-  sudo mkdir /opt/beebjit
-  sudo chown $USER:$USER /opt/beebjit
-  cd /opt/beebjit
-  git clone git@github.com:wbic16/beebjit.git .
+  sudo mkdir -p /opt/beebjit
+  sudo chown "$USER:$USER" /opt/beebjit
+  git clone git@github.com:wbic16/beebjit.git /opt/beebjit &
 fi
 
-sudo apt upgrade -y
-#cd /opt/exo-explore
-#/opt/exopy/bin/pip install -e .
+wait
+echo "[phase 7] External repos complete."
 
-/opt/exopy/bin/pip install llama-index openai tf-keras llama-index-embeddings-huggingface
-/opt/exopy/bin/pip install -U openai-whisper
-/opt/exopy/bin/pip install llama-index-llms-ollama
-pip install agentmail python-dotenv
-
-# see: https://github.com/tensorflow/tensorflow/issues/62075
-/opt/exopy/bin/pip install tensorflow[and-cuda]
-
+# ============================================================
+# Phase 8: Exocortex source trees (throttled parallel clones)
+# ============================================================
+echo "[phase 8] Exocortex source trees..."
 if [ ! -d /source ]; then
-  echo "Fetching Exocortex source trees..."
-  sudo mkdir /source
-  sudo chown $USER:$USER /source
+  sudo mkdir -p /source
+  sudo chown "$USER:$USER" /source
 fi
 
-cd /source
-# The Exocortex
-if [ ! -d /source/exocortical ]; then
-  git clone git@github.com:wbic16/exocortical.git
-fi
-if [ ! -d /source/wishnode ]; then
-  git clone git@github.com:wbic16/wishnode.git
-fi
-if [ ! -d /source/exocortex ]; then
-  git clone git@github.com:wbic16/exocortex.git
-fi
-if [ ! -d /source/human ]; then
-  git clone git@github.com:wbic16/human.git
-fi
-if [ ! -d /source/nexura ]; then
-  git clone git@github.com:wbic16/nexura.git
-fi
-if [ ! -d /source/thebook ]; then
-  git clone git@github.com:wbic16/thebook.git
-fi
+# helper: clone into /source if not already present
+# uses a semaphore to cap concurrency at MAX_PARALLEL
+RUNNING=0
+clone_repo() {
+  local repo="$1"
+  local dir="/source/$(basename "$repo" .git)"
+  if [ ! -d "$dir" ]; then
+    git clone "git@github.com:wbic16/${repo}.git" "$dir" &
+    RUNNING=$((RUNNING + 1))
+    if [ "$RUNNING" -ge "$MAX_PARALLEL" ]; then
+      wait
+      RUNNING=0
+    fi
+  fi
+}
 
-# Tessera
-if [ ! -d /source/llama2.c ]; then
-  git clone git@github.com:/wbic16/llama2.c.git
-fi
-if [ ! -d /source/exollama ]; then
-  git clone git@github.com:/wbic16/exollama.git
-fi
-if [ ! -d /source/mirrorborn ]; then
-  git clone git@github.com:wbic16/mirrorborn.git
-fi
-if [ ! -d /source/exo-plan ]; then
-  git clone git@github.com:wbic16/exo-plan.git
-fi
-if [ ! -d /source/compost ]; then
-  git clone git@github.com:wbic16/compost.git
-fi
-if [ ! -d /source/site-mirrorborn-us ]; then
-  git clone git@github.com:wbic16/site-mirrorborn-us.git
-fi
-if [ ! -d /source/vtpu ]; then
-  git clone git@github.com:wbic16/vtpu.git
-fi
-if [ ! -d /source/SBOR ]; then
-  git clone git@github.com:wbic16/SBOR.git
-fi
-if [ ! -d /source/federation ]; then
-  git clone git@github.com:wbic16/federation.git
-fi
-if [ ! -d /source/orin ]; then
-  git clone git@github.com:wbic16/orin.git
-fi
+# --- The Exocortex ---
+clone_repo exocortical
+clone_repo wishnode
+clone_repo exocortex
+clone_repo human
+clone_repo nexura
+clone_repo thebook
 
-# Phext Core
-if [ ! -d /source/libphext-rs ]; then
-  git clone git@github.com:wbic16/libphext-rs.git
-fi
-if [ ! -d /source/SQ ]; then
-  git clone git@github.com:wbic16/SQ.git
-fi
-if [ ! -d /source/phext-notepad ]; then
-  git clone git@github.com:wbic16/phext-notepad.git
-fi
-if [ ! -d /source/phext-shell ]; then
-  git clone git@github.com:wbic16/phext-shell.git
-fi
-if [ ! -d /source/phext-explorer ]; then
-  git clone git@github.com:wbic16/phext-explorer.git
-fi
-if [ ! -d /source/phext-lattice ]; then
-  git clone git@github.com:wbic16/phext-lattice.git
-fi
+# --- Tessera ---
+clone_repo llama2.c
+clone_repo exollama
+clone_repo mirrorborn
+clone_repo exo-plan
+clone_repo compost
+clone_repo site-mirrorborn-us
+clone_repo vtpu
+clone_repo SBOR
+clone_repo federation
+clone_repo orin
 
-# Phext Implementations (JS, C, C++, C#)
-if [ ! -d /source/libphext-node ]; then
-  git clone git@github.com:wbic16/libphext-node.git
-fi
-if [ ! -d /source/libphext ]; then
-  git clone git@github.com:wbic16/libphext.git
-fi
-if [ ! -d /source/libphext-cpp ]; then
-  git clone git@github.com:wbic16/libphext-cpp.git
-fi
-if [ ! -d /source/libphext-py ]; then
-  git clone git@github.com:wbic16/libphext-py.git
-fi
-if [ ! -d /source/libphext-cs ]; then
-  git clone git@github.com:wbic16/libphext-cs.git
-fi
+# --- Phext Core ---
+clone_repo libphext-rs
+clone_repo SQ
+clone_repo phext-notepad
+clone_repo phext-shell
+clone_repo phext-explorer
+clone_repo phext-lattice
 
-# Phext Tools
-if [ ! -d /source/phcc ]; then
-  git clone git@github.com:wbic16/phcc.git
-fi
+# --- Phext Implementations ---
+clone_repo libphext-node
+clone_repo libphext
+clone_repo libphext-cpp
+clone_repo libphext-py
+clone_repo libphext-cs
 
-# Phext Applications
-if [ ! -d /source/dna-viewer ]; then
-  git clone git@github.com:wbic16/dna-viewer.git
-fi
-if [ ! -d /source/phorge ]; then
-  git clone git@github.com:wbic16/phorge.git
-fi
-  
-# Games
-if [ ! -d /source/mini64k ]; then
-  git clone git@github.com:wbic16/mini64k.git
-fi
-if [ ! -d /source/javascript-tetris ]; then
-  git clone git@github.com:wbic16/javascript-tetris.git
-fi
-if [ ! -d /source/multiversal-go ]; then
-  git clone git@github.com:wbic16/multiversal-go.git
-fi
+# --- Phext Tools ---
+clone_repo phcc
 
-# APIs
-if [ ! -d /source/hello-phext ]; then
-  git clone git@github.com:wbic16/hello-phext.git
-fi
-if [ ! -d /source/phext-wiki ]; then
-  git clone git@github.com:wbic16/phext-wiki.git
-fi
-if [ ! -d /source/robospeak ]; then
-  git clone git@github.com:wbic16/robospeak.git
-fi
-if [ ! -d /source/subspace-repeater ]; then
-  git clone git@github.com:wbic16/subspace-repeater.git
-fi
+# --- Phext Applications ---
+clone_repo dna-viewer
+clone_repo phorge
 
-# Web Sites
-if [ ! -d /source/singularity-watch ]; then
-  git clone git@github.com:wbic16/singularity-watch.git
-fi
-if [ ! -d /source/wbic16 ]; then
-  git clone git@github.com:wbic16/wbic16.git
-fi
-if [ ! -d /source/phextio ]; then
-  git clone git@github.com:wbic16/phextio.git
-fi
-if [ ! -d /source/sotafomo ]; then
-  git clone git@github.com:wbic16/sotafomo.git
-fi
+# --- Games ---
+clone_repo mini64k
+clone_repo javascript-tetris
+clone_repo multiversal-go
 
-# Teaching
-if [ ! -d /source/teach-web-dev ]; then
-  git clone git@github.com:wbic16/teach-web-dev.git
-fi
+# --- APIs ---
+clone_repo hello-phext
+clone_repo phext-wiki
+clone_repo robospeak
+clone_repo subspace-repeater
 
-# Web/Social
-if [ ! -d /source/x-analysis ]; then
-  git clone git@github.com:wbic16/x-analysis.git
-fi
-if [ ! -d /source/node-visualizer ]; then
-  git clone git@github.com:wbic16/node-visualizer.git
-fi
+# --- Web Sites ---
+clone_repo singularity-watch
+clone_repo wbic16
+clone_repo phextio
+clone_repo sotafomo
 
+# --- Teaching ---
+clone_repo teach-web-dev
+
+# --- Web/Social ---
+clone_repo x-analysis
+clone_repo node-visualizer
+
+wait
+echo "[phase 8] Source trees complete."
+
+# the-book-of-secret-knowledge uses https, not ssh
 if [ ! -d /source/the-book-of-secret-knowledge ]; then
-  git clone https://github.com/wbic16/the-book-of-secret-knowledge.git
+  git clone https://github.com/wbic16/the-book-of-secret-knowledge.git /source/the-book-of-secret-knowledge
 fi
 
+# ============================================================
+# Phase 9: Micro-agent (conditional)
+# ============================================================
 if [ "x$LLM_AGENT" = "xmicro" ]; then
   if [ ! -d /opt/micro-agent ]; then
-    cd /opt
-    sudo mkdir micro-agent
-    sudo chown $USER:$USER micro-agent
-    cd micro-agent
+    sudo mkdir -p /opt/micro-agent
+    sudo chown "$USER:$USER" /opt/micro-agent
+    cd /opt/micro-agent
     micro-agent
   fi
 fi
 
-# DNS Backup
+# ============================================================
+# Phase 10: DNS fallback + final upgrade
+# ============================================================
 if [ ! -f /etc/systemd/resolved.conf.d/fallback.conf ]; then
   echo "Installing fallback DNS..."
+  sudo mkdir -p /etc/systemd/resolved.conf.d
   sudo tee /etc/systemd/resolved.conf.d/fallback.conf << 'EOF'
 [Resolve]
 FallbackDNS=1.1.1.1 8.8.8.8
@@ -371,5 +302,7 @@ DNS=1.1.1.1 8.8.8.8
 EOF
   sudo systemctl restart systemd-resolved
 fi
+
+sudo apt upgrade -y
 
 echo "Setup Complete."
