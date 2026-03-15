@@ -28,7 +28,7 @@ sudo apt update -y
 sudo apt install -y --no-install-recommends \
   git git-lfs gh \
   zram-config net-tools \
-  build-essential clang \
+  build-essential clang pkg-config libssl-dev \
   vim neovim \
   htop \
   openssh-server \
