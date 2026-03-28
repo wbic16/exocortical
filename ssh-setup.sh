@@ -11,4 +11,4 @@ if [ ! -d exocortical ]; then
 fi
 cd exocortical
 ./enable-virtual-memory.sh
-g/setup.sh
+./setup.sh
