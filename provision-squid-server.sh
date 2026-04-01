@@ -50,6 +50,15 @@ apt-get install -y squid-openssl openssl nginx-light apparmor-utils
 sudo aa-complain /etc/apparmor.d/usr.sbin.squid
 
 # -----------------------------------------------------------
+# 1.1. Disable Apache2 in favor of nginx
+# -----------------------------------------------------------
+sudo systemctl stop apache2
+sudo systemctl disable apache2
+sudo apt-mark hold apache2
+sudo systemctl restart nginx
+sudo systemctl status nginx
+
+# -----------------------------------------------------------
 # 2. Generate CA certificate for SSL bumping
 # -----------------------------------------------------------
 echo "[2/7] Generating CA certificate for SSL interception..."
@@ -158,9 +167,7 @@ maximum_object_size_in_memory ${MAX_OBJ_MEM_MB} MB
 cache allow all
 
 # Strip/ignore headers that prevent caching
-ignore_no_cache allow all
-ignore_private  allow all
-ignore_no_store allow all
+store_miss deny all
 
 # Aggressively override freshness for specific content types
 
