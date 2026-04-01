@@ -46,7 +46,8 @@ echo "============================================"
 # -----------------------------------------------------------
 echo "[1/7] Installing squid and dependencies..."
 apt-get update -qq
-apt-get install -y squid-openssl openssl nginx-light
+apt-get install -y squid-openssl openssl nginx-light apparmor-utils
+sudo aa-complain /etc/apparmor.d/usr.sbin.squid
 
 # -----------------------------------------------------------
 # 2. Generate CA certificate for SSL bumping
@@ -76,7 +77,7 @@ chmod 644 "${EXPORT_CERT}"
 # -----------------------------------------------------------
 # 3. Initialize SSL certificate database
 # -----------------------------------------------------------
-echo "[3/7] Initializing SSL certificate database..."
+echo "[3/7] Initializing SSL certificate database ($SSL_DB)..."
 rm -rf "${SSL_DB}"
 mkdir -p "${SSL_DB}"
 /usr/lib/squid/security_file_certgen -c -s "${SSL_DB}" -M 64MB
