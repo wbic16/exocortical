@@ -46,7 +46,7 @@ echo "============================================"
 # -----------------------------------------------------------
 echo "[1/7] Installing squid and dependencies..."
 apt-get update -qq
-apt-get install -y squid squid-openssl openssl nginx-light
+apt-get install -y squid-openssl openssl nginx-light
 
 # -----------------------------------------------------------
 # 2. Generate CA certificate for SSL bumping
