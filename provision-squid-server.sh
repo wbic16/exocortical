@@ -122,7 +122,6 @@ acl Safe_ports port 11434        # Ollama API
 acl CONNECT method CONNECT
 
 # Domains we care about caching
-acl ollama_registry dstdomain registry.ollama.ai
 acl ollama_cdn dstdomain .ollama.ai .amazonaws.com .cloudfront.net
 acl apt_repos dstdomain .ubuntu.com .debian.org .launchpad.net
 acl pypi_repos dstdomain pypi.org files.pythonhosted.org
@@ -131,7 +130,6 @@ acl crates_repos dstdomain crates.io static.crates.io index.crates.io
 
 # -- SSL Bump ---------------------------------------------------------------
 # Bump (intercept) traffic to cacheable domains; splice everything else
-acl bump_targets dstdomain registry.ollama.ai
 acl bump_targets dstdomain .ollama.ai
 acl bump_targets dstdomain .amazonaws.com
 acl bump_targets dstdomain .cloudfront.net
@@ -158,7 +156,6 @@ maximum_object_size_in_memory ${MAX_OBJ_MEM_MB} MB
 # -- Cache Behavior ---------------------------------------------------------
 # Be aggressive: ignore origin server cache-control for known-good domains
 cache allow all
-send_hit deny none
 
 # Strip/ignore headers that prevent caching
 ignore_no_cache allow all
