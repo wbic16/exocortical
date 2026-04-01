@@ -78,6 +78,7 @@ chmod 644 "${EXPORT_CERT}"
 # -----------------------------------------------------------
 echo "[3/7] Initializing SSL certificate database..."
 rm -rf "${SSL_DB}"
+mkdir -p "${SSL_DB}"
 /usr/lib/squid/security_file_certgen -c -s "${SSL_DB}" -M 64MB
 chown -R proxy:proxy "${SSL_DB}"
 
