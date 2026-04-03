@@ -165,7 +165,7 @@ else
 fi
 
 # Test HTTPS through SSL bump proxy
-if curl -sf --proxy "${PROXY_SSL}" -o /dev/null https://registry.ollama.ai/v2/ 2>/dev/null; then
+if curl -sf --proxy "${PROXY_SSL}" -o /dev/null https://registry.ollama.ai/v2/library/qwen3/manifests/latest 2>/dev/null; then
     echo "  -> Ollama registry (HTTPS): OK"
 else
     echo "  -> Ollama registry (HTTPS): FAILED"
