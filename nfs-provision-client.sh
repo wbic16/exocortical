@@ -7,7 +7,7 @@ set -euo pipefail
 
 # --- Configuration ---
 # Set this to orchid-flow's IP or hostname.
-NFS_SERVER="orchid-flow.lan"
+NFS_SERVER="orchid-flow"
 NFS_ROOT="/srv/mirrorborn"
 MOUNT_BASE="/mnt/mirrorborn"
 
