@@ -149,6 +149,11 @@ acl bump_targets dstdomain static.crates.io
 ssl_bump bump bump_targets
 ssl_bump splice all
 
+# Cache manager access from localhost
+acl manager url_regex -i ^cache_object:// /squid-internal-mgr/
+http_access allow localhost manager
+http_access deny manager
+
 # -- Access Control ---------------------------------------------------------
 http_access deny !Safe_ports
 http_access deny CONNECT !SSL_ports
