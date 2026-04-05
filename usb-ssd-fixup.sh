@@ -16,6 +16,8 @@ fi
 sudo systemctl disable --now snapd snapd.socket snapd.seeded.service snapd.apparmor.service
 sudo systemctl disable --now unattended-upgrades apt-daily.timer apt-daily-upgrade.timer
 echo none | sudo tee /sys/block/sda/queue/scheduler
+sudo sed -i 's|/ ext4 defaults 0|/ ext4 defaults,noatime 0|' /etc/fstab
+sudo sed -i 's|/boot ext4 defaults 0|/boot ext4 defaults,noatime 0|' /etc/fstab
 
 if [ ! -f /etc/systemd/journald.conf.d/volatile.conf ]
 then
