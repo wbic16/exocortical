@@ -1,4 +1,5 @@
 #!/bin/bash
+DISABLE_SNAPS=0
 if [ ! -f /etc/sysctl.d/99-minimize-disk-io.conf ]
 then
   cat << 'EOF' | sudo tee /etc/sysctl.d/99-minimize-disk-io.conf
@@ -13,7 +14,10 @@ EOF
   sudo sysctl --system
 fi
 
-sudo systemctl disable --now snapd snapd.socket snapd.seeded.service snapd.apparmor.service
+if [ $DISABLE_SNAPS -eq 1 ]
+then
+  sudo systemctl disable --now snapd snapd.socket snapd.seeded.service snapd.apparmor.service
+fi
 sudo systemctl disable --now unattended-upgrades apt-daily.timer apt-daily-upgrade.timer
 echo none | sudo tee /sys/block/sda/queue/scheduler
 sudo sed -i 's|/ ext4 defaults 0|/ ext4 defaults,noatime 0|' /etc/fstab
