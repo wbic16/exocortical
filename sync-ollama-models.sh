@@ -12,7 +12,7 @@ ssh ${REMOTE} "sudo killall ollama"
 
 # allow the current user to do work
 ssh ${REMOTE} "sudo chown -R $USER:$USER ${OLLAMA_HOME}"
-chown -R $USER:$USER ${OLLAMA_HOME}
+sudo chown -R $USER:$USER ${OLLAMA_HOME}
 
 echo "=== Pulling from ${REMOTE} ==="
 rsync -av --progress ${REMOTE}:${MODELS} ${MODELS}
