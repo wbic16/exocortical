@@ -44,7 +44,8 @@ sudo apt install -y --no-install-recommends \
   rustup \
   python3.12-venv linux-libc-dev python3-dev python3-pip \
   php gparted screen \
-  libasound2-dev libpulse-dev libxext-dev
+  libasound2-dev libpulse-dev libxext-dev \
+  wireless-tools
 
 # snap packages (docker only - avahi snap is conditional below)
 if ! snap list docker &>/dev/null; then
