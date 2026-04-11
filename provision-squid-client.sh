@@ -141,6 +141,7 @@ echo "  -> pip configured."
 if command -v npm &>/dev/null; then
     npm config set proxy "${PROXY_HTTP}" --global 2>/dev/null || true
     npm config set https-proxy "${PROXY_SSL}" --global 2>/dev/null || true
+    npm config set cafile "$CA_LOCAL"
     echo "  -> npm configured."
 else
     echo "  -> npm not found, skipping."
