@@ -46,7 +46,9 @@ ADDR="${TB_MAP[$HOSTNAME]}"
 
 # Load thunderbolt module if needed
 modprobe thunderbolt 2>/dev/null || true
-modprobe thunderbolt-net 2>/dev/null || true
+modprobe thunderbolt_net 2>/dev/null || true
+
+nmcli connection add type ethernet con-name tb0 ifname tb0 ipv4.method manual ipv4.addresses "$ADDR/24" autoconnect yes
 
 # Wait briefly for tb0 to appear
 for i in {1..5}; do
