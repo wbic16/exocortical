@@ -48,9 +48,9 @@ ADDR="${TB_MAP[$HOSTNAME]}"
 modprobe thunderbolt 2>/dev/null || true
 modprobe thunderbolt_net 2>/dev/null || true
 
-nmcli connection add type ethernet con-name tb0 ifname tb0 ipv4.method manual ipv4.addresses "$ADDR/24" autoconnect yes
+# nmcli connection add type ethernet con-name tb0 ifname tb0 ipv4.method manual ipv4.addresses "$ADDR/24" autoconnect yes
 
-# Wait briefly for tb0 to appear
+# Wait for thunderbolt0 to appear
 for i in {1..5}; do
   ip link show "$IFACE" &>/dev/null && break
   echo "Waiting for $IFACE... ($i/5)"
@@ -64,7 +64,24 @@ fi
 
 # Flush existing addresses and apply
 ip addr flush dev "$IFACE"
-ip addr add "${ADDR}/${PREFIX}" dev "$IFACE"
-ip link set "$IFACE" up
+#ip addr add "${ADDR}/${PREFIX}" dev "$IFACE"
 
+# Create the bridge
+ip link add name tbfab type bridge 2>/dev/null || true
+ip link set tbfab up
+ip link set tbfab mtu 65520
+
+# Enslave every thunderbolt interface we find
+for iface in $(ls /sys/class/net/ | grep ^thunderbolt); do
+  ip link set "$iface" up mtu 65520
+  ip link set "$iface" master tbfab
+done
+
+# Configure bridge with IP
+ip addr flush dev tbfab
+ip addr add "$ADDR/16" dev tbfab
+
+echo "[$HOSTNAME] tbfab -> $ADDR/16 with $(ls /sys/class/net/ | grep -c ^thunderbolt) ports"
+
+ip link set "$IFACE" up
 echo "OK: $HOSTNAME -> $IFACE @ $ADDR/$PREFIX"
