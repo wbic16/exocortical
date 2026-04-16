@@ -86,7 +86,9 @@ echo "[$HOSTNAME] tbfab -> $ADDR/16 with $(ls /sys/class/net/ | grep -c ^thunder
 ip link set "$IFACE" up
 echo "OK: $HOSTNAME -> $IFACE @ $ADDR/$PREFIX"
 
-sudo tee /etc/systemd/system/tb-fabric.service << 'EOF'
+if [ ! -f /etc/systemd/system/tb-fabric.service ]
+then
+  sudo tee /etc/systemd/system/tb-fabric.service << 'EOF'
 [Unit]
 Description=Mirrorborn USB4 fabric setup
 After=network.target
@@ -100,6 +102,9 @@ RemainAfterExit=yes
 [Install]
 WantedBy=multi-user.target
 EOF
-sudo systemctl daemon-reload
-sudo systemctl enable tb-fabric.service
-echo "[tb-fabric]: OK"
+  sudo systemctl daemon-reload
+  sudo systemctl enable tb-fabric.service
+  echo "[tb-fabric]: Installed"
+else
+  echo "[tb-fabric]: OK"
+fi
