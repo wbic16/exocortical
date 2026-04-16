@@ -34,7 +34,7 @@ declare -A TB_MAP=(
 )
 
 HOSTNAME=$(hostname -s)
-IFACE=tb0
+IFACE=thunderbolt0
 PREFIX=24
 
 if [[ -z "${TB_MAP[$HOSTNAME]+x}" ]]; then
