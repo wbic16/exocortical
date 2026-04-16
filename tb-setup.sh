@@ -75,6 +75,7 @@ ip link set tbfab mtu 65520
 for iface in $(ls /sys/class/net/ | grep ^thunderbolt); do
   ip link set "$iface" up mtu 65520
   ip link set "$iface" master tbfab
+  ip link set "$iface" promisc on
 done
 
 # Configure bridge with IP
