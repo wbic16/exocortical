@@ -5,11 +5,13 @@
 set -euo pipefail
 
 SETUP_FILE="/etc/exocortical-llm-optimized.done"
-if [ -f "$SETUP_FILE" ]; then
+# FORCE=1 re-applies on an already-optimized node (skips the done-file guard)
+if [ -f "$SETUP_FILE" ] && [ "${FORCE:-0}" != "1" ]; then
   echo "LLM inference already optimized."
   echo "--- current config ---"
   cat /proc/sys/vm/swappiness
   ollama list 2>/dev/null || true
+  echo "Re-apply with: sudo FORCE=1 $0"
   exit 0
 fi
 
@@ -152,9 +154,9 @@ case "${RAM_TIER}-${EXOCORTEX_SHELL}" in
 esac
 
 # Ollama's Vulkan backend lives in lib/ollama/vulkan and needs the shared
-# ggml libs (libggml-base.so*) next to it. If either is missing, Ollama
-# silently falls back to CPU even with OLLAMA_VULKAN=1. Restore them from
-# the release tarball matching the installed version.
+# ggml libs (libggml-base.so*) next to it. Some 0.20.x installs shipped
+# without them and silently fell back to CPU. This only fires when those
+# files are actually missing, so it is a no-op on complete 0.40.x installs.
 OLLAMA_BIN="$(readlink -f "$(command -v ollama)")"
 OLLAMA_LIB="$(dirname "$(dirname "$OLLAMA_BIN")")/lib/ollama"
 if lspci -d '1002:' 2>/dev/null | grep -q . && \
@@ -170,28 +172,39 @@ sudo tee "${OLLAMA_OVERRIDE}/exocortical.conf" << EOF
 [Service]
 Environment="OLLAMA_HOST=0.0.0.0:11434"
 Environment="OLLAMA_VULKAN=1"
+Environment="OLLAMA_IGPU_ENABLE=1"
 Environment="OLLAMA_MAX_LOADED_MODELS=${MAX_MODELS}"
 Environment="OLLAMA_NUM_PARALLEL=2"
 Environment="OLLAMA_FLASH_ATTENTION=1"
 Environment="OLLAMA_KEEP_ALIVE=24h"
 Environment="OLLAMA_NUM_CTX=${NUM_CTX}"
+Environment="OLLAMA_CONTEXT_LENGTH=${NUM_CTX}"
 EOF
+# Notes for Ollama 0.40.x on the 780M (gfx1103):
+#  - integrated GPUs are dropped unless OLLAMA_IGPU_ENABLE=1
+#  - ROCm drops gfx1103 (no rocblas); Vulkan is the working path
+#  - 0.40.x ignores OLLAMA_NUM_CTX; OLLAMA_CONTEXT_LENGTH sets the default
 
 sudo systemctl daemon-reload
 sudo systemctl restart ollama 2>/dev/null || true
 
 # verify a GPU was discovered; Ollama logs "inference compute ... library=cpu" on fallback
 sleep 10
-GPU_LINE="$(sudo journalctl -u ollama --since "-30s" --no-pager 2>/dev/null | grep 'inference compute' | grep -v 'library=cpu' | tail -1 || true)"
+OLLAMA_LOG="$(sudo journalctl -u ollama --since "-30s" --no-pager 2>/dev/null || true)"
+GPU_LINE="$(echo "$OLLAMA_LOG" | grep 'inference compute' | grep -v 'library=cpu' | tail -1 || true)"
 if [ -n "$GPU_LINE" ]; then
   echo "[phase 4] GPU OK: $(echo "$GPU_LINE" | grep -o 'description="[^"]*"') $(echo "$GPU_LINE" | grep -o 'total="[^"]*"')"
 else
   echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" >&2
   echo "[phase 4] WARNING: Ollama found NO GPU and is running on CPU only." >&2
-  echo "  check: ls $OLLAMA_LIB/vulkan; journalctl -u ollama | grep 'inference compute'" >&2
+  if echo "$OLLAMA_LOG" | grep -q 'dropping integrated GPU'; then
+    echo "  Ollama dropped the iGPU: OLLAMA_IGPU_ENABLE=1 is not reaching the service." >&2
+    echo "  check: systemctl show ollama -p Environment | tr ' ' '\\n' | grep IGPU" >&2
+  fi
+  echo "  check: ls $OLLAMA_LIB/vulkan; journalctl -u ollama | grep -E 'inference compute|dropping'" >&2
   echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" >&2
 fi
-echo "[phase 4] Ollama configured: max_models=${MAX_MODELS} ctx=${NUM_CTX} vulkan=1"
+echo "[phase 4] Ollama configured: max_models=${MAX_MODELS} ctx=${NUM_CTX} vulkan=1 igpu=1"
 
 # ============================================================
 # Phase 5: Model pulls (by shell + tier)
@@ -231,6 +244,42 @@ else
 fi
 
 # ============================================================
+# Phase 5b: Pin models too big for the iGPU to CPU
+# ============================================================
+# On the 780M, Ollama's Vulkan backend puts GPU layers in VRAM/GTT *and* the
+# CPU-side layers in a pinned Vulkan_Host buffer, which also comes out of GTT.
+# Any model whose weights exceed the GTT window fails to load at every layer
+# split ("radv/amdgpu: Not enough memory for command submission",
+# ErrorDeviceLost), and Ollama returns HTTP 500 instead of falling back.
+# Measured on 0.40.11, kernel 7.0 and 6.8, gttsize=16384: gemma3:27b (17 GB)
+# and qwen3.6:35b-a3b (23 GB) fail at num_gpu 4..auto; on CPU the 35B MoE does
+# ~21 tok/s. So re-create those tags in place with num_gpu 0 (same name, so
+# callers keep working; undo with `ollama pull <model>`).
+# Override the cutoff with PIN_CPU_OVER_GB; set it to 0 to skip.
+GTT_GB=$(( $(cat /sys/class/drm/card*/device/mem_info_gtt_total 2>/dev/null | sort -n | tail -1 || echo 0) / 1073741824 ))
+[ "$GTT_GB" -gt 0 ] || GTT_GB=$(( GTT_MB / 1024 ))
+PIN_CPU_OVER_GB="${PIN_CPU_OVER_GB:-$(( GTT_GB * 3 / 4 ))}"
+if [ "$PIN_CPU_OVER_GB" -gt 0 ] && command -v ollama >/dev/null 2>&1; then
+  echo "[phase 5b] Pinning models larger than ${PIN_CPU_OVER_GB} GB to CPU (GTT ${GTT_GB} GB)..."
+  ollama list 2>/dev/null | awk 'NR>1 && $4=="GB" && $3+0 > lim {print $1}' lim="$PIN_CPU_OVER_GB" | while read -r m; do
+    if ollama show --parameters "$m" 2>/dev/null | grep -q '^num_gpu *0$'; then
+      echo "[phase 5b]   $m already pinned"
+      continue
+    fi
+    MF="$(mktemp)"
+    printf 'FROM %s\nPARAMETER num_gpu 0\n' "$m" > "$MF"
+    if ollama create "$m" -f "$MF" >/dev/null 2>&1; then
+      echo "[phase 5b]   $m -> num_gpu 0"
+    else
+      echo "[phase 5b]   WARNING: could not pin $m" >&2
+    fi
+    rm -f "$MF"
+  done
+else
+  echo "[phase 5b] Skipping CPU pinning."
+fi
+
+# ============================================================
 # Phase 6: Firewall - allow Ollama on LAN only
 # ============================================================
 echo "[phase 6] Firewall rules..."
@@ -252,7 +301,7 @@ echo ""
 echo "=== Exocortical LLM Optimization Complete ==="
 echo "  RAM tier:    ${RAM_TIER} GB"
 echo "  Shell:       ${EXOCORTEX_SHELL}"
-echo "  Ollama:      vulkan=1 flash_attn=1 ctx=${NUM_CTX}"
+echo "  Ollama:      vulkan=1 igpu=1 flash_attn=1 ctx=${NUM_CTX}"
 echo "  Max models:  ${MAX_MODELS}"
 echo "  GTT size:    ${GTT_MB} MB (reboot to apply)"
 echo "  Swap:        $(swapon --show --noheadings --bytes | awk '{s+=$3}END{printf "%.0f GB", s/1073741824}')"
@@ -262,4 +311,4 @@ if [ "$GRUB_UPDATED" -eq 1 ]; then
   echo "*** REBOOT REQUIRED for amdgpu.gttsize and iommu changes ***"
 fi
 
-echo "Done" | sudo tee "$SETUP_FILE"
+echo "Done" | sudo tee "$SETUP_FILE" >/dev/null
