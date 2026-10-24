@@ -151,6 +151,20 @@ case "${RAM_TIER}-${EXOCORTEX_SHELL}" in
   *)    NUM_CTX=8192   ;;  # unassigned default
 esac
 
+# Ollama's Vulkan backend lives in lib/ollama/vulkan and needs the shared
+# ggml libs (libggml-base.so*) next to it. If either is missing, Ollama
+# silently falls back to CPU even with OLLAMA_VULKAN=1. Restore them from
+# the release tarball matching the installed version.
+OLLAMA_BIN="$(readlink -f "$(command -v ollama)")"
+OLLAMA_LIB="$(dirname "$(dirname "$OLLAMA_BIN")")/lib/ollama"
+if lspci -d '1002:' 2>/dev/null | grep -q . && \
+   { [ ! -e "$OLLAMA_LIB/vulkan/libggml-vulkan.so" ] || ! ls "$OLLAMA_LIB"/libggml-base.so* >/dev/null 2>&1; }; then
+  OLLAMA_VER="$(ollama -v 2>/dev/null | awk '{print $NF}')"
+  echo "[phase 4] Ollama ${OLLAMA_VER} is missing its Vulkan/ggml libs; restoring from release..."
+  curl -fsSL "https://github.com/ollama/ollama/releases/download/v${OLLAMA_VER}/ollama-linux-amd64.tar.zst" \
+    | sudo tar --zstd -x -C "$(dirname "$(dirname "$OLLAMA_LIB")")" --exclude='lib/ollama/cuda_*' lib/ollama
+fi
+
 # listen on all interfaces so PromptRouter can reach any node
 sudo tee "${OLLAMA_OVERRIDE}/exocortical.conf" << EOF
 [Service]
@@ -165,6 +179,18 @@ EOF
 
 sudo systemctl daemon-reload
 sudo systemctl restart ollama 2>/dev/null || true
+
+# verify a GPU was discovered; Ollama logs "inference compute ... library=cpu" on fallback
+sleep 10
+GPU_LINE="$(sudo journalctl -u ollama --since "-30s" --no-pager 2>/dev/null | grep 'inference compute' | grep -v 'library=cpu' | tail -1 || true)"
+if [ -n "$GPU_LINE" ]; then
+  echo "[phase 4] GPU OK: $(echo "$GPU_LINE" | grep -o 'description="[^"]*"') $(echo "$GPU_LINE" | grep -o 'total="[^"]*"')"
+else
+  echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" >&2
+  echo "[phase 4] WARNING: Ollama found NO GPU and is running on CPU only." >&2
+  echo "  check: ls $OLLAMA_LIB/vulkan; journalctl -u ollama | grep 'inference compute'" >&2
+  echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" >&2
+fi
 echo "[phase 4] Ollama configured: max_models=${MAX_MODELS} ctx=${NUM_CTX} vulkan=1"
 
 # ============================================================
