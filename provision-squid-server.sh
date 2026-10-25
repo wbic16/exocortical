@@ -52,9 +52,18 @@ sudo aa-complain /etc/apparmor.d/usr.sbin.squid
 # -----------------------------------------------------------
 # 1.1. Disable Apache2 in favor of nginx
 # -----------------------------------------------------------
-sudo systemctl stop apache2
-sudo systemctl disable apache2
-sudo apt-mark hold apache2
+set +e
+HAVE_APACHE2=`sudo systemctl status apache2`
+NO_APACHE2="Unit apache2.service could not be found."
+if [ "x$HAVE_APACHE2" = "x$NO_APACHE2" ]
+then
+  echo "apache2 already disabled"
+else
+  sudo systemctl stop apache2
+  sudo systemctl disable apache2
+  sudo apt-mark hold apache2
+fi
+set -e
 sudo systemctl restart nginx
 sudo systemctl status nginx
 
@@ -80,6 +89,7 @@ fi
 
 # Make cert downloadable via HTTP for client provisioning
 mkdir -p /var/www/html
+sudo mkdir -p /var/lib/squid
 cp "${CA_CERT}" "${EXPORT_CERT}"
 chmod 644 "${EXPORT_CERT}"
 
