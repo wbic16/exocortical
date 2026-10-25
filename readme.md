@@ -95,3 +95,13 @@ Failover: apt calls `Acquire::http::Proxy-Auto-Detect` (and the https equivalent
 Hit rates: `bash squid-chains.sh status` asks each proxy for squid state and `squidclient` hit ratios. On a proxy, `bash squid-cache-monitor.sh` prints the same counters plus the client probe files.
 
 `SQUID_SIBLINGS=1` on a server adds ICP (`cache_peer ... sibling 3128 3130 proxy-only`, UDP 3130) so a miss can be served from another chain before the WAN. Leave it off unless you want that. Bumped HTTPS may not use siblings.
+
+A node that was provisioned with the old shared-proxy script (workers 4, one aufs cache) must run `sudo bash provision-squid-server.sh` again. That layout crashed Squid 6.14 on ni-knight (`Controller.cc:930` assertion, signal 6) and killed in-flight downloads. The script detects `workers` other than 1, stops Squid, wipes `/var/spool/squid`, and runs `squid -z` before starting. Do that wipe whenever the worker or cache_dir layout changes; aufs swap state from the SMP layout is not reusable. The new unit drop-in sets `LimitNOFILE=16384` (the old process only had 1024 file descriptors).
+
+Fleet Ollama installs should not use `curl | sudo bash` on the official installer (no retry, and the stream is not checked). On a client that already ran `provision-squid-client.sh auto`:
+
+```
+sudo OLLAMA_VERSION=0.40.11 bash install-ollama-cached.sh
+```
+
+The script sleeps a random 0–60s first (`OLLAMA_INSTALL_JITTER` to override), probes the chain proxy, downloads `ollama-linux-*.tar.zst` with `--retry 8 -C -`, and runs `zstd -t` before extracting to `/usr/local`. An AMD GPU also gets the `-rocm` archive. The same `OLLAMA_VERSION` on a later run skips the download. HTTPS installer bytes are bumped on `ollama.com` and the GitHub release CDNs and cached; `github.com` itself stays spliced.

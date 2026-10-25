@@ -205,6 +205,27 @@ chown -R proxy:proxy "${CACHE_DIR}"
 # -----------------------------------------------------------
 echo "[5/7] Writing squid.conf..."
 
+install -d -m 755 /usr/local/bin
+install -m 755 "${SCRIPT_DIR}/squid-release-store-id" /usr/local/bin/squid-release-store-id
+
+# workers N>1 with one aufs cache_dir is the layout that crashed on ni-knight
+# (assertion in Controller.cc, signal 6). Rebuilding the swap state is required
+# when leaving that layout; a re-run that is already workers 1 keeps the cache.
+RESET_CACHE=0
+OLD_WORKERS=""
+if [[ -f /etc/squid/squid.conf ]]; then
+  OLD_WORKERS="$(awk '/^[[:space:]]*workers[[:space:]]+/ {
+    v=$2
+    gsub(/[^0-9].*/, "", v)
+    if (v != "") w=v
+  }
+  END { if (w != "") print w }' /etc/squid/squid.conf)"
+  if [[ -n "${OLD_WORKERS}" && "${OLD_WORKERS}" != "1" ]]; then
+    RESET_CACHE=1
+    echo "  -> Old layout detected (workers ${OLD_WORKERS}). Cache will be wiped and squid -z will rebuild it."
+  fi
+fi
+
 LOOPBACK_PORT=""
 if [[ "${LISTEN_IP}" != "127.0.0.1" ]]; then
   LOOPBACK_PORT="http_port 127.0.0.1:${SQUID_PORT}"
@@ -245,15 +266,22 @@ cat > /etc/squid/squid.conf << SQUIDEOF
 # ============================================================================
 # Ranch Choir per-chain caching proxy (${HOSTNAME_S})
 # ============================================================================
-# workers is 1 on purpose. Squid 6.14 aufs is not SMP-safe: workers 4 and a
-# single cache_dir aufs made several kids FATAL with "Failed to make swap
-# directory ... File exists" and the proxy never listened.
+# workers is 1 on purpose.
+#   * Squid 6.14 aufs is not SMP-safe. workers 4 and one cache_dir aufs made
+#     kids FATAL with "Failed to make swap directory ... File exists".
+#   * On ni-knight (Squid 6.14, that old config) workers died with
+#     FATAL: assertion failed: Controller.cc:930: "!transients || e.hasTransients()"
+#     (signal 6) at 20:01, 20:02, and 20:59. Each abort killed every in-flight
+#     download (Ollama installer "unexpected EOF").
 # store_miss is intentionally unset. "store_miss deny all" still fetches the
 # object and then refuses to store it, so the next request is another TCP_MISS.
+# ni-knight also logged "With 1024 file descriptors available". The unit
+# drop-in raises LimitNOFILE to 16384 and max_filedescriptors matches it.
 # ============================================================================
 
 cache_effective_user proxy
 cache_effective_group proxy
+max_filedescriptors 16384
 
 # Fabric address, plus loopback so squidclient on this host can reach
 # the cache manager without exposing it on the bridge.
@@ -284,14 +312,22 @@ acl Safe_ports port 11434
 acl CONNECT method CONNECT
 
 acl bump_targets dstdomain .ollama.ai
+acl bump_targets dstdomain .ollama.com
+acl bump_targets dstdomain release-assets.githubusercontent.com
+acl bump_targets dstdomain objects.githubusercontent.com
 acl bump_targets dstdomain .amazonaws.com
 acl bump_targets dstdomain .cloudfront.net
 acl bump_targets dstdomain files.pythonhosted.org
 acl bump_targets dstdomain registry.npmjs.org
 acl bump_targets dstdomain static.crates.io
 
-# Bump cacheable registries; splice everything else (verified on Squid 6.14:
-# CONNECT to a .ollama.ai name is decrypted, other names are TCP_TUNNEL).
+# ssl_bump sees only the CONNECT host (SNI). The URL path is still inside TLS,
+# so github.com cannot be bumped "only for /releases/download/". github.com is
+# left spliced: git, the API, and Authorization headers stay end-to-end. The
+# installer follows a small 302 from github.com to the CDN hosts below, and
+# those hosts are where the multi-GB body is. Cache ACLs (not ssl_bump) limit
+# what is stored.
+# Bump cacheable registries; splice everything else.
 ssl_bump bump bump_targets
 ssl_bump splice all
 
@@ -314,7 +350,25 @@ cache_mem ${MEM_MB} MB
 maximum_object_size ${MAX_OBJ_SIZE_MB} MB
 maximum_object_size_in_memory ${MAX_OBJ_MEM_MB} MB
 
+# CDN URLs are signed. Only an ollama-linux archive name in the URL is stored.
+# Other objects on those hosts are fetched and discarded.
+acl github_release_cdn dstdomain release-assets.githubusercontent.com objects.githubusercontent.com
+acl ollama_archive url_regex -i ollama-linux-.*\\.(tar\\.zst|tgz|tar\\.gz)
+cache deny github_release_cdn !ollama_archive
 cache allow all
+
+# Signed CDN queries differ per client. The helper keys the body on the stable
+# asset path plus the archive name. refresh_pattern matches that store id.
+store_id_program /usr/local/bin/squid-release-store-id
+store_id_children 4 startup=1 idle=1
+store_id_access allow github_release_cdn
+store_id_access deny all
+
+# ollama.com/download/*.tar.zst is a 307, not the archive. Keep it short so
+# an unversioned "latest" redirect is not pinned for 90 days. The bytes use
+# the store-id pattern below (the id ends in /ollama-linux-*.tar.zst).
+refresh_pattern -i ollama\\.com/download/      0       20%   1440
+refresh_pattern -i /ollama-linux-.*\\.(tar\\.zst|tgz|tar\\.gz)\$ 129600 100% 129600 override-expire override-lastmod reload-into-ims ignore-no-store ignore-private
 
 # Ollama blobs are content-addressed. The override-* options warn at startup;
 # they are what makes a multi-GB pull stay a hit for the rest of the chain.
@@ -338,11 +392,26 @@ refresh_pattern -i \\.crate\$                   129600  100%  129600  override-e
 refresh_pattern .                             0       20%   4320
 
 range_offset_limit -1
+# Finish storing a multi-GB object even if the client disappears mid-download.
 quick_abort_min -1
 
 connect_timeout 60 seconds
-read_timeout 600 seconds
+# read_timeout / write_timeout are idle gaps, reset after every successful
+# read or write. Squid's default is 15 minutes; the previous config used 10.
+# 30 minutes covers a stall while other nodes saturate the chain, and a
+# transfer that is still moving never hits the timer.
+read_timeout 30 minutes
+write_timeout 30 minutes
+# Default is 1 day. A client socket (including a spliced CONNECT) may carry
+# a multi-GB body. Leave this at 24 hours so a slow pull is not capped early,
+# and so a dead client does not pin an FD longer than Squid's own default.
 client_lifetime 24 hours
+# Planned shutdown only. The default 30 seconds aborts every in-flight tunnel
+# on systemctl restart. 10 minutes lets a restart drain short transfers.
+# A worker SIGABRT does not honor this; workers 1 is what stops that abort.
+# install-ollama-cached.sh resumes with curl -C - when a restart still cuts
+# a multi-GB pull.
+shutdown_lifetime 10 minutes
 pconn_timeout 300 seconds
 
 # One worker. aufs is not shared across SMP workers in Squid 6.
@@ -373,7 +442,40 @@ cat > /etc/systemd/system/squid.service.d/tb-fabric.conf << 'EOF'
 [Unit]
 After=tb-fabric.service network-online.target
 Wants=network-online.target tb-fabric.service
+
+[Service]
+# ni-knight logged "With 1024 file descriptors available" (no LimitNOFILE
+# on the packaged unit). max_filedescriptors 16384 cannot exceed this.
+LimitNOFILE=16384
 EOF
+
+stop_squid() {
+  if squid_have_systemd; then
+    systemctl stop squid || true
+  fi
+  if [[ -f /run/squid.pid ]]; then
+    squid -k shutdown >/dev/null 2>&1 || true
+    local waited=0
+    while [[ -f /run/squid.pid && "${waited}" -lt 12 ]]; do
+      sleep 0.5
+      waited=$((waited + 1))
+    done
+  fi
+  if pgrep -x squid >/dev/null 2>&1; then
+    pkill -x squid || true
+    sleep 0.5
+  fi
+}
+
+if [[ "${RESET_CACHE}" -eq 1 ]]; then
+  echo "  -> Stopping squid and wiping ${CACHE_DIR} (workers ${OLD_WORKERS} -> 1)."
+  stop_squid
+  mkdir -p "${CACHE_DIR}"
+  find "${CACHE_DIR}" -mindepth 1 -delete
+  chown proxy:proxy "${CACHE_DIR}"
+  squid -z --foreground
+  echo "  -> squid -z finished."
+fi
 
 if squid_have_systemd; then
   systemctl daemon-reload
@@ -381,7 +483,9 @@ if squid_have_systemd; then
   systemctl restart squid
 else
   echo "  -> systemd is not running; config is installed, service was not started."
-  squid -z --foreground 2>/dev/null || true
+  if [[ "${RESET_CACHE}" -eq 0 ]]; then
+    squid -z --foreground 2>/dev/null || true
+  fi
 fi
 
 if squid_have_systemd; then

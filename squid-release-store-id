@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+# Squid store-id helper for Ollama release archives.
+#
+# release-assets.githubusercontent.com (and objects.githubusercontent.com)
+# put a fresh Azure signature in the query string on every redirect, and the
+# object id is the path. Two nodes downloading the same archive would otherwise
+# be two cache keys. When the signed URL names an ollama-linux-*.tar.zst or
+# .tgz, reply with a stable store id of <url-without-query>/<filename>.
+#
+# refresh_pattern is applied to this store id, not the client URL, so the id
+# ends in the archive name on purpose.
+#
+# Any other URL (including non-Ollama objects on those CDNs) is ERR: Squid
+# keeps the client URL and the cache ACL does not store it.
+# shellcheck shell=bash
+set -u
+
+decode_filename() {
+  # Only the encodings used in GitHub's response-content-disposition / rscd.
+  local query="$1" decoded name
+  decoded=$(printf '%s' "$query" | sed -e 's/+/ /g' -e 's/%3[Bb]/;/g' -e 's/%20/ /g' -e 's/%3[Dd]/=/g')
+  name=$(printf '%s' "$decoded" | sed -n 's/.*[Ff]ilename="\{0,1\}\([^;&" ]*\).*/\1/p' | head -n 1)
+  printf '%s' "$name"
+}
+
+while IFS= read -r line || [[ -n "${line}" ]]; do
+  # No concurrency= on the helper, so the line is the URL plus ignored extras.
+  url="${line%%[[:space:]]*}"
+  url="${url%$'\r'}"
+  case "${url}" in
+    https://release-assets.githubusercontent.com/*|http://release-assets.githubusercontent.com/*|https://objects.githubusercontent.com/*|http://objects.githubusercontent.com/*)
+      ;;
+    *)
+      printf 'ERR\n'
+      continue
+      ;;
+  esac
+
+  base="${url%%\?*}"
+  query=""
+  if [[ "${url}" == *\?* ]]; then
+    query="${url#*\?}"
+  fi
+  filename="$(decode_filename "${query}")"
+  case "${filename}" in
+    ollama-linux-*.tar.zst|ollama-linux-*.tgz|ollama-linux-*.tar.gz)
+      printf 'OK store-id="%s/%s"\n' "${base}" "${filename}"
+      ;;
+    *)
+      printf 'ERR\n'
+      ;;
+  esac
+done
