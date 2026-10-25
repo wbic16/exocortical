@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# Print a proxy URL, or DIRECT if that port does not accept TCP within 1s.
+#
+# Apt execs this with the target URI as $1 (Acquire::{http,https}::Proxy-Auto-Detect).
+# Shell and Ollama callers pass "http" or "https".
+# shellcheck shell=bash
+set -u
+
+conf=/etc/ranch-squid/client.env
+if [[ ! -r "$conf" ]]; then
+  printf 'DIRECT\n'
+  exit 0
+fi
+# shellcheck disable=SC1090
+source "$conf"
+
+uri="${1:-}"
+mode=http
+case "$uri" in
+  https://*|https) mode=https ;;
+  http://*|http) mode=http ;;
+esac
+
+ip="${SQUID_IP:-}"
+if [[ "$mode" == https ]]; then
+  port="${SQUID_SSL_PORT:-3129}"
+else
+  port="${SQUID_HTTP_PORT:-3128}"
+fi
+
+if [[ -z "$ip" || -z "$port" ]]; then
+  printf 'DIRECT\n'
+  exit 0
+fi
+
+if timeout 1 bash -c "echo >/dev/tcp/${ip}/${port}" 2>/dev/null; then
+  printf 'http://%s:%s\n' "$ip" "$port"
+else
+  printf 'DIRECT\n'
+fi
+exit 0

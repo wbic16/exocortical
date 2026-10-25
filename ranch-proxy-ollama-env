@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# Rewrite /run/ranch-proxy.env from a live probe. An empty file makes
+# Ollama go direct. systemd reads EnvironmentFile when it spawns ExecStart,
+# which is after this ExecStartPre has exited (systemd 255).
+# shellcheck shell=bash
+set -u
+
+out=/run/ranch-proxy.env
+tmp="$(mktemp "${out}.XXXXXX" 2>/dev/null || true)"
+if [[ -z "$tmp" ]]; then
+  exit 0
+fi
+
+trap 'rm -f "$tmp"' EXIT
+: >"$tmp"
+
+conf=/etc/ranch-squid/client.env
+detector=/usr/local/bin/ranch-proxy-autodetect
+if [[ -r "$conf" && -x "$detector" ]]; then
+  # shellcheck disable=SC1090
+  source "$conf"
+  http="$("$detector" http 2>/dev/null || true)"
+  https="$("$detector" https 2>/dev/null || true)"
+  np="${NO_PROXY_LIST:-localhost,127.0.0.1,.ts.net,10.0.0.0/8,100.64.0.0/10}"
+  {
+    if [[ -n "$http" && "$http" != DIRECT ]]; then
+      printf 'HTTP_PROXY=%s\n' "$http"
+      printf 'http_proxy=%s\n' "$http"
+    fi
+    if [[ -n "$https" && "$https" != DIRECT ]]; then
+      printf 'HTTPS_PROXY=%s\n' "$https"
+      printf 'https_proxy=%s\n' "$https"
+    fi
+    if [[ ( -n "$http" && "$http" != DIRECT ) || ( -n "$https" && "$https" != DIRECT ) ]]; then
+      printf 'NO_PROXY=%s\n' "$np"
+      printf 'no_proxy=%s\n' "$np"
+    fi
+  } >"$tmp"
+fi
+
+chmod 644 "$tmp"
+mv -f "$tmp" "$out"
+trap - EXIT
+exit 0
