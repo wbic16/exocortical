@@ -306,4 +306,17 @@ fi
 
 sudo apt upgrade -y
 
+# ============================================================
+# Phase 11: Formal verification tools (Charon / Aeneas / Lean)
+# ============================================================
+# The toolchain that proves libphext-rs correct is installed by that
+# repo's own script (single source of truth for the recipe); Phase 8
+# already cloned it into /source. Everything lands in ~/.proof-tools.
+echo "[phase 11] Proof tools (Charon/Aeneas/Lean)..."
+if [ -x /source/libphext-rs/scripts/install-proof-tools.sh ]; then
+  /source/libphext-rs/scripts/install-proof-tools.sh
+else
+  echo "[phase 11] /source/libphext-rs not present - skipping proof tools."
+fi
+
 echo "Setup Complete."
