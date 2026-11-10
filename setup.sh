@@ -25,10 +25,14 @@ echo "[phase 1] System packages..."
 sudo apt update -y
 
 # batch all apt packages into one transaction
+# (ninja-build/gettext/cmake/unzip + lua5.1/liblua5.1-0-dev below are the
+# exovim build/test dependencies from wbic16/neovim BUILD.md + PHEXT.md —
+# the exovim build itself is Phase 12)
 sudo apt install -y --no-install-recommends \
   git git-lfs gh \
   zram-config net-tools \
   build-essential clang pkg-config libssl-dev \
+  ninja-build gettext cmake unzip lua5.1 liblua5.1-0-dev \
   vim neovim \
   htop \
   openssh-server \
@@ -318,5 +322,71 @@ if [ -x /source/libphext-rs/scripts/install-proof-tools.sh ]; then
 else
   echo "[phase 11] /source/libphext-rs not present - skipping proof tools."
 fi
+
+# ============================================================
+# Phase 12: exovim — phext-support Neovim (wbic16/neovim)
+# ============================================================
+# exovim is the phext-support fork of Neovim: a pure-Lua runtime plugin
+# (scroll-as-buffer navigation over .phext files) carried on upstream
+# master. Its build/test dependencies (ninja-build gettext cmake curl
+# build-essential git unzip pkg-config lua5.1 liblua5.1-0-dev, per the
+# repo's BUILD.md + PHEXT.md) are installed in Phase 1's apt batch.
+#
+# Install layout: source lives in /source/neovim (clone-or-update,
+# like Phase 8's trees) and installs into its own prefix, /opt/exovim,
+# so the apt `nvim` from Phase 1 is untouched. The user-facing command
+# is /usr/local/bin/exovim, a symlink to /opt/exovim/bin/nvim —
+# Neovim locates its runtime relative to the real binary's path, so
+# the prefix tree (including the phext runtime) stays intact.
+#
+# Idempotency: /opt/exovim/.exovim-commit stamps the built commit;
+# a re-run rebuilds only when upstream master has moved (or the
+# binary is missing).
+echo "[phase 12] exovim (phext Neovim)..."
+EXOVIM_SRC=/source/neovim
+EXOVIM_PREFIX=/opt/exovim
+if [ ! -d "$EXOVIM_SRC" ]; then
+  git clone git@github.com:wbic16/neovim.git "$EXOVIM_SRC" || true
+fi
+if [ -d "$EXOVIM_SRC" ]; then
+  git -C "$EXOVIM_SRC" pull --ff-only || \
+    echo "[phase 12] exovim source pull failed - building the checkout as-is."
+  EXOVIM_WANT=$(git -C "$EXOVIM_SRC" rev-parse HEAD)
+  EXOVIM_HAVE=""
+  if [ -f "$EXOVIM_PREFIX/.exovim-commit" ]; then
+    EXOVIM_HAVE=$(cat "$EXOVIM_PREFIX/.exovim-commit")
+  fi
+  if [ "$EXOVIM_WANT" != "$EXOVIM_HAVE" ] || [ ! -x "$EXOVIM_PREFIX/bin/nvim" ]; then
+    sudo mkdir -p "$EXOVIM_PREFIX"
+    sudo chown "$USER:$USER" "$EXOVIM_PREFIX"
+    (
+      cd "$EXOVIM_SRC"
+      make CMAKE_BUILD_TYPE=RelWithDebInfo CMAKE_INSTALL_PREFIX="$EXOVIM_PREFIX"
+      make CMAKE_INSTALL_PREFIX="$EXOVIM_PREFIX" install
+    )
+    echo "$EXOVIM_WANT" > "$EXOVIM_PREFIX/.exovim-commit"
+    echo "[phase 12] exovim built at $EXOVIM_WANT"
+  else
+    echo "[phase 12] exovim already up to date ($EXOVIM_HAVE) - skipping build."
+  fi
+  sudo ln -sf "$EXOVIM_PREFIX/bin/nvim" /usr/local/bin/exovim
+else
+  echo "[phase 12] /source/neovim not present - skipping exovim."
+fi
+
+# phcc variant (documented, NOT the default path): to compile exovim
+# with phcc (the phext TinyCC fork) instead of the system compiler,
+# build the bundled deps once with the system compiler, then nvim
+# itself with phcc. Verified recipe from wbic16/neovim PHEXT.md:
+# PREFER_LUA=ON selects the bundled Lua 5.1.5 (LuaJIT is not a phcc
+# target), and the LUA_MATH_LIBRARY pre-seed is required because
+# CMake's FindLua resolves libm only via CMAKE_LIBRARY_ARCHITECTURE,
+# which the TinyCC compiler-ABI probe leaves empty:
+#   cmake -S cmake.deps -B .deps -G Ninja -DCMAKE_BUILD_TYPE=Release -DUSE_BUNDLED_LUA=ON
+#   cmake --build .deps
+#   CC="<path-to-phcc>/tcc -B<path-to-phcc>" \
+#   cmake -B build-phcc -G Ninja -DCMAKE_BUILD_TYPE=Release -DPREFER_LUA=ON \
+#         -DLUA_MATH_LIBRARY=/usr/lib/x86_64-linux-gnu/libm.so
+#   cmake --build build-phcc
 
 echo "Setup Complete."
