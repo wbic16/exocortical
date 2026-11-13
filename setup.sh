@@ -384,7 +384,7 @@ fi
 # which the TinyCC compiler-ABI probe leaves empty:
 #   cmake -S cmake.deps -B .deps -G Ninja -DCMAKE_BUILD_TYPE=Release -DUSE_BUNDLED_LUA=ON
 #   cmake --build .deps
-#   CC="<path-to-phcc>/tcc -B<path-to-phcc>" \
+#   CC="<path-to-phcc>/phcc -B<path-to-phcc>" \
 #   cmake -B build-phcc -G Ninja -DCMAKE_BUILD_TYPE=Release -DPREFER_LUA=ON \
 #         -DLUA_MATH_LIBRARY=/usr/lib/x86_64-linux-gnu/libm.so
 #   cmake --build build-phcc
