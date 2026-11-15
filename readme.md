@@ -8,9 +8,11 @@ This repository provides an Ubuntu-based reconfiguration for running an Exocorte
 * clang
 * gcc
 * git
+* icecc
 * openssh
 * php
 * python
+* sccache
 * vim
 * zram
 * cmake, ninja-build, gettext, unzip (exovim build — see below)
@@ -43,6 +45,7 @@ build variant is documented as a comment in the Phase 12 block of
 ## Tooling
 
 * phoronix (benchmarking)
+* sccache + icecream (distributed builds - sccache-setup.sh, icecream-scheduler.sh, icecream-node.sh)
 * exopy (llvmlite, numba, torch, tensorflow)
 * exolabs
 * beebjit

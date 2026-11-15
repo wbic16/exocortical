@@ -389,4 +389,21 @@ fi
 #         -DLUA_MATH_LIBRARY=/usr/lib/x86_64-linux-gnu/libm.so
 #   cmake --build build-phcc
 
+# ============================================================
+# Phase 12: Distributed builds (sccache + icecream)
+# ============================================================
+# sccache fronts compiles with the fleet-shared cache on the
+# orchid-flow NFS share; icecream spreads I/O-bound compiles across
+# the fleet's nodes. The one scheduler lives on aletheia-core and is
+# installed there by icecream-scheduler.sh - every node (including
+# the scheduler node) runs the daemon via icecream-node.sh.
+echo "[phase 12] Distributed builds (sccache + icecream)..."
+if [ -x ./sccache-setup.sh ]; then
+  ./sccache-setup.sh
+fi
+if [ -x ./icecream-node.sh ]; then
+  ./icecream-node.sh
+fi
+# Build shells opt in per session: source ./enable-distributed-builds.sh
+
 echo "Setup Complete."
