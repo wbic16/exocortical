@@ -404,5 +404,6 @@ fi
 if [ -x ./icecream-node.sh ]; then
   ./icecream-node.sh
 fi
+# Build shells opt in per session: source ./enable-distributed-builds.sh
 
 echo "Setup Complete."

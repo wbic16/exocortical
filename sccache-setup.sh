@@ -63,6 +63,6 @@ else
   sccache --start-server
   echo "  server started"
 fi
-sccache --show-stats | head -8
+sccache --show-stats
 echo ""
 echo "=== sccache setup complete on $(hostname) ==="
