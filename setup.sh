@@ -113,11 +113,64 @@ echo "[phase 4] Cargo installs complete."
 # Phase 5: Python virtual environment + pip installs (batched)
 # ============================================================
 echo "[phase 5] Python environment..."
-if [ ! -d /opt/exopy ]; then
-  sudo mkdir -p /opt/exopy
-  sudo chown "$USER:$USER" /opt/exopy
-  python3 -m venv /opt/exopy
-fi
+# /opt/exopy rides the newest Python the Phase 5 stack supports
+# (Will's ruling, 2026-11-21): "latest" here means the latest Python
+# version on which the Phase 5 stack below remains compatible - torch
+# and vLLM compatibility is the binding constraint. EXOPY_STACK_PYTHON
+# is that series,
+# measured 2026-11-21 by full dependency resolution (uv pip compile of
+# the whole Phase 5 set) against each candidate series, newest first;
+# the measurement and the per-series evidence live in task
+# 40.3.4/4.4.5/4.4.6. When torch/vLLM add support for a newer Python,
+# re-run that resolution and move this one line - uv resolves the
+# newest point release within the series, so point releases track
+# automatically. (The newest CPython overall, 3.15.2 as of the
+# measurement, is NOT the target: on 3.15 the stack does not resolve -
+# tensorflow ships no cp315 wheel in any version, and vLLM's tree
+# fails with it.)
+EXOPY_STACK_PYTHON="3.14"
+ensure_exopy_latest() {
+  local exopy="$1"
+  if ! command -v uv &>/dev/null; then
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+    export PATH="$HOME/.local/bin:$PATH"
+  fi
+  uv self update &>/dev/null || true # keep uv's release data fresh
+  uv python install "$EXOPY_STACK_PYTHON" # newest point release of the series
+  local latest_bin latest_ver current_ver=""
+  latest_bin=$(uv python find "$EXOPY_STACK_PYTHON")
+  latest_ver=$("$latest_bin" -c 'import sys; print(".".join(map(str, sys.version_info[:3])))')
+  if [ -x "$exopy/bin/python" ]; then
+    current_ver=$("$exopy/bin/python" -c 'import sys; print(".".join(map(str, sys.version_info[:3])))' 2>/dev/null || true)
+  fi
+  if [ "$current_ver" = "$latest_ver" ]; then
+    echo "[phase 5] $exopy already on Python $latest_ver (newest the Phase 5 stack supports) - no rebuild."
+    return 0
+  fi
+  echo "[phase 5] Rebuilding $exopy on Python $latest_ver (was: ${current_ver:-none})..."
+  # Prove the replacement interpreter end-to-end BEFORE touching the
+  # working venv: a throwaway probe venv must come up on the target
+  # version with a working pip. (A venv cannot be built at a staging
+  # path and moved into place - its entry points embed the build
+  # path - so the real venv is created at its final path, but only
+  # after this probe passes.)
+  local probe
+  probe=$(mktemp -d)
+  "$latest_bin" -m venv "$probe/venv"
+  [ "$("$probe/venv/bin/python" -c 'import sys; print(".".join(map(str, sys.version_info[:3])))')" = "$latest_ver" ]
+  "$probe/venv/bin/pip" --version &>/dev/null
+  rm -rf "$probe"
+  if [ -d "$exopy" ]; then
+    sudo rm -rf "$exopy"
+  fi
+  sudo mkdir -p "$exopy"
+  sudo chown "$USER:$USER" "$exopy"
+  "$latest_bin" -m venv "$exopy"
+  [ "$("$exopy/bin/python" -c 'import sys; print(".".join(map(str, sys.version_info[:3])))')" = "$latest_ver" ]
+  "$exopy/bin/pip" --version &>/dev/null
+  echo "[phase 5] $exopy rebuilt on Python $latest_ver."
+}
+ensure_exopy_latest /opt/exopy
 
 # batch all pip installs into one call
 /opt/exopy/bin/pip3 install --quiet \
