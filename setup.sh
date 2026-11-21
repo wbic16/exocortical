@@ -129,6 +129,15 @@ fi
 
 /opt/exopy/bin/pip install --quiet -U openai-whisper
 
+# vLLM gets its own install line (like openai-whisper above): it pins
+# its own torch/CUDA stack, so it resolves after the batch instead of
+# inside it. Serve any Hugging Face model with:
+#   /opt/exopy/bin/vllm serve <model>
+# which answers on the OpenAI-compatible endpoint at port 8000.
+# (Serving wants an NVIDIA GPU; the install itself is harmless on
+# GPU-less nodes, same as the torch/tensorflow batch above.)
+/opt/exopy/bin/pip install --quiet vllm
+
 pip install --quiet agentmail python-dotenv 2>/dev/null || true
 
 # ============================================================
