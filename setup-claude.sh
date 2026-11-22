@@ -9,6 +9,12 @@
 # ~/.local/share/claude/versions/) were then staged to NFS. Nodes pull
 # from NFS and verify against the staged manifest — no per-node
 # download, and the same hash discipline as the original script.
+#
+# Notes: plain `cp`, never `cp -a` — the NFS mount cannot preserve
+# ownership/permissions ("Operation not supported"), which killed the
+# first fleet pass under `set -e`. The copy lands on a temp file and
+# is hash-verified before it moves into place, and a node that already
+# holds the exact payload skips the copy entirely.
 set -e
 NFS_CLAUDE=/mnt/mirrorborn/shared/claude-cli
 VER=$(basename "$(ls -d "$NFS_CLAUDE"/*/ | sort -V | tail -1)")
@@ -17,16 +23,24 @@ if [ ! -f "$SRC" ]; then
   echo "staged Claude payload not found: $SRC (is the fleet NFS mounted?)"
   exit 1
 fi
+EXPECTED=$(grep "  ./$VER\$" "$NFS_CLAUDE/$VER/MANIFEST.sha256" | awk '{print $1}')
 DEST_DIR="$HOME/.local/share/claude/versions"
 DEST="$DEST_DIR/$VER"
 mkdir -p "$DEST_DIR" "$HOME/.local/bin"
-cp -a "$SRC" "$DEST"
-chmod +x "$DEST"
-EXPECTED=$(grep "  ./$VER\$" "$NFS_CLAUDE/$VER/MANIFEST.sha256" | awk '{print $1}')
-ACTUAL=$(sha256sum "$DEST" | awk '{print $1}')
-if [ "x$EXPECTED" != "x$ACTUAL" ]; then
-  echo "Hash mismatch on $DEST: got $ACTUAL, staged manifest says $EXPECTED"
-  exit 1
+if [ -f "$DEST" ] && [ "x$(sha256sum "$DEST" | awk '{print $1}')" = "x$EXPECTED" ]; then
+  echo "Payload already present and hash-verified, skipping copy."
+else
+  TMP="$DEST.tmp"
+  rm -f "$TMP"
+  cp "$SRC" "$TMP"
+  chmod +x "$TMP"
+  ACTUAL=$(sha256sum "$TMP" | awk '{print $1}')
+  if [ "x$EXPECTED" != "x$ACTUAL" ]; then
+    echo "Hash mismatch on staged payload: got $ACTUAL, staged manifest says $EXPECTED"
+    rm -f "$TMP"
+    exit 1
+  fi
+  mv "$TMP" "$DEST"
 fi
 ln -sf "$DEST" "$HOME/.local/bin/claude"
 echo "Installed Claude $VER from NFS (hash verified)."
