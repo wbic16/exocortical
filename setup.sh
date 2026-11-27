@@ -290,6 +290,9 @@ clone_repo SBOR
 clone_repo federation
 clone_repo orin
 
+# --- Local Inference ---
+clone_repo inkling
+
 # --- Phext Core ---
 clone_repo libphext-rs
 clone_repo SQ
@@ -338,6 +341,14 @@ clone_repo node-visualizer
 
 wait
 echo "[phase 8] Source trees complete."
+
+# inkling is clone-or-update (like exovim in Phase 12): the
+# local-inference tooling tracks exo, so a re-run of setup pulls it
+# forward instead of leaving the first clone frozen.
+if [ -d /source/inkling ]; then
+  git -C /source/inkling pull --ff-only || \
+    echo "[phase 8] inkling pull failed - using the checkout as-is."
+fi
 
 # the-book-of-secret-knowledge uses https, not ssh
 if [ ! -d /source/the-book-of-secret-knowledge ]; then

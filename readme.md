@@ -41,6 +41,7 @@ build variant is documented as a comment in the Phase 12 block of
 * ollama
 * exollama
 * llama2.c
+* inkling (FP-Solve tooling for Inkling-2-Mini — ports, transport, bench)
 
 ## Tooling
 
@@ -57,6 +58,7 @@ The setup script also helps you clone a number of related repositories.
 * exocortical
 * wishnode
 * exocortex
+* inkling
 * human
 * nexura
 * thebook
